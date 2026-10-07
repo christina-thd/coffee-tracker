@@ -1,0 +1,238 @@
+/* Shared by every part of the page: theme, reset, buttons, segmented controls, sheets, toast. */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #120e0b;
+  --surface: #1c1612;
+  --surface-2: #241d18;
+  --surface-3: #30271f;
+  --line: #3a2f27;
+  --ink: #f4ede6;
+  --muted: #b5a698;
+  --faint: #7d6f63;
+  --accent: #e3a96b;
+  --accent-strong: #c27c3e;
+  --accent-ink: #1f130a;
+  --glow: rgb(194 124 62 / 0.45);
+  --danger: #f87171;
+
+  /* how a brew tasted */
+  --good: #4ade80;
+  --sour: #facc15;
+  --bitter: #fb7185;
+  --off: #a8a29e;
+  /* roast levels */
+  --light: #e8c39e;
+  --medium: #c48a55;
+  --medium-dark: #9a6236;
+  --dark: #6b4226;
+
+  --radius: 14px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --font-body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  /* the top of the screen kept free above sheets */
+  --toast-room: 24px;
+  /* messages (js/ui/toast.js) sit this far above the bottom: clear of the + button, and of a sheet's Save button */
+  --toast-lift: 92px;
+  /* the part of the screen you can see (smaller while the keyboard is open), kept up to date by js/ui/viewport.js */
+  --viewport-top: 0px;
+  --viewport-height: 100dvh;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* no double-tap zoom (iPhone zooms on two quick taps); pinch zoom still works */
+html { background: var(--bg); touch-action: manipulation; }
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  background:
+    radial-gradient(120% 50% at 50% -14%, rgb(194 124 62 / 0.2), transparent 62%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--ink);
+  font: 14px/1.4 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+body.locked { overflow: hidden; }
+
+button, input, textarea, select { font: inherit; color: inherit; }
+button { border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+svg.icon { width: 1.2em; height: 1.2em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ----- pill buttons ----- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 120ms var(--ease), background 160ms;
+}
+.pill:active { transform: scale(0.97); }
+.pill.primary { background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: var(--accent-ink); box-shadow: 0 6px 20px -8px var(--glow); }
+.pill.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+.pill.danger { background: transparent; border: 1px solid rgb(248 113 113 / 0.35); color: var(--danger); }
+.pill.danger.armed { background: var(--danger); color: #1f0a0a; border-color: transparent; }
+
+/* ----- segmented control: a row of buttons, one of them .selected ----- */
+
+.segmented {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);             /* equal buttons that may shrink on narrow phones */
+  grid-auto-flow: column;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.segmented > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 38px;
+  border-radius: 999px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 13.5px;
+  transition: color 200ms, background 200ms;
+}
+.segmented > button.selected { color: var(--accent-ink); background: var(--tab-color, var(--accent)); box-shadow: 0 4px 16px -6px var(--tab-color, var(--glow)); }
+.segmented > button svg.icon { width: 16px; height: 16px; }
+/* verdicts and roasts: in their own color once picked */
+.segmented > [data-verdict="good"] { --tab-color: var(--good); }
+.segmented > [data-verdict="sour"] { --tab-color: var(--sour); }
+.segmented > [data-verdict="bitter"] { --tab-color: var(--bitter); }
+.segmented > [data-verdict="off"] { --tab-color: var(--off); }
+.segmented > [data-roast="light"] { --tab-color: var(--light); }
+.segmented > [data-roast="medium"] { --tab-color: var(--medium); }
+.segmented > [data-roast="medium-dark"] { --tab-color: var(--medium-dark); }
+.segmented > [data-roast="dark"] { --tab-color: var(--dark); }
+.segmented > [data-roast="medium-dark"].selected, .segmented > [data-roast="dark"].selected { color: var(--ink); }
+
+/* ----- sheets: a layer with a dimmed backdrop and a panel that slides up ----- */
+
+.layer {
+  position: fixed;
+  top: var(--viewport-top);
+  left: 0;
+  right: 0;
+  height: var(--viewport-height);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+.layer + .layer { z-index: 21; }
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(5 3 2 / 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 260ms var(--ease);
+}
+
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 560px;                              /* on a PC: a panel, not the whole width */
+  max-height: calc(var(--viewport-height) - var(--safe-top) - var(--toast-room));
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 -20px 60px -20px rgb(0 0 0 / 0.8);
+  transform: translateY(100%);
+  transition: transform 300ms var(--ease);
+  overflow: hidden;
+}
+.layer.open .backdrop { opacity: 1; }
+.layer.open .sheet { transform: none; }
+
+/* swipe down to close (js/ui/sheet.js): the sheet follows the finger while dragging */
+.sheet.dragging { transition: none; }
+[data-drag] { touch-action: none; }
+
+.grabber {
+  flex: none;
+  height: 22px;
+  cursor: grab;
+}
+.grabber::before {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 5px;
+  margin: 9px auto 0;
+  border-radius: 3px;
+  background: var(--surface-3);
+}
+
+/* ----- toast ----- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  /* near the bottom of the part you can see (above the keyboard when it's open), its bottom edge --toast-lift up */
+  top: calc(var(--viewport-top) + var(--viewport-height) - var(--toast-lift) - var(--safe-bottom));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 11px 18px;
+  width: max-content;                            /* one line when it fits; wraps (never cut) when it doesn't */
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: var(--surface-3);
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.8);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% + 12px));   /* rises into place */
+  transition: opacity 200ms, transform 240ms var(--ease);
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, -100%); pointer-events: auto; cursor: pointer; }   /* tap: dismissed */
+.toast-text { overflow-wrap: anywhere; }
+.toast-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.toast-icon svg.icon { width: 13px; height: 13px; stroke-width: 2.6; }
+.toast.error { border-color: rgb(248 113 113 / 0.4); color: #fecaca; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+}

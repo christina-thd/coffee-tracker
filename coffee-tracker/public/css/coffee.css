@@ -1,0 +1,416 @@
+/* The coffee tracker: header, tabs and columns, brew and bean cards, the + button, and the sheets' contents. */
+
+.app {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 12px) 12px calc(96px + var(--safe-bottom));   /* room below for the + button */
+}
+
+/* the app's name, for screen readers only: on screen, the tabs are the top of the page */
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* the live connection has been down a few seconds (js/app.js): changes from other screens won't show until it's back.
+   Floats at the bottom left, clear of the tabs and the + button. */
+.offline-badge {
+  position: fixed;
+  left: 16px;
+  bottom: calc(34px + var(--safe-bottom));
+  z-index: 10;
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgb(250 204 21 / 0.3);
+  background: var(--surface-2);
+  color: var(--sour);
+  font-size: 12px;
+  font-weight: 600;
+}
+.offline-badge svg.icon { width: 13px; height: 13px; }
+body.offline .offline-badge { display: inline-flex; }
+
+/* ----- tabs (phones) and columns ----- */
+
+.tabs {
+  position: sticky;
+  top: calc(var(--safe-top) + 6px);
+  z-index: 5;
+  box-shadow: 0 8px 20px -6px var(--bg);
+}
+.tabs > button { min-height: 40px; }
+
+.board { margin-top: 12px; }
+.column { display: none; }
+.column.current { display: block; }
+.column-head {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* wide screens (PC, tablet in landscape): the three columns side by side, no tabs */
+@media (min-width: 900px) {
+  .app { padding-left: 28px; padding-right: 28px; }
+  .tabs { display: none; }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
+    margin-top: 20px;
+  }
+  .column, .column.current {
+    display: block;
+    padding: 12px;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgb(28 22 18 / 0.55);
+  }
+  .column-head { display: flex; padding: 0 4px; }
+  .brew:hover, .bean:hover { background: var(--surface-2); }
+}
+
+/* ----- above the tabs: the logo and a greeting (js/coffee/hero.js) ----- */
+
+.hero { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; padding: 2px 2px 0; }
+.hero img { border-radius: 7px; }
+.greeting { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+
+/* ----- a coffee on a method's tab: a recipe card (js/coffee/board.js) ----- */
+
+/* one flat card: no boxes inside it */
+.coffee { padding: 14px 16px 10px; border-radius: 18px; background: var(--surface); }
+.coffee.finished { opacity: 0.6; }
+.coffee-head { display: flex; align-items: baseline; gap: 10px; }
+.coffee-head .bean-name { font-size: 16px; }
+.coffee-bag { margin: 1px 0 0; color: var(--faint); font-size: 11.5px; }
+
+/* how the recipe shown came out, top right: in its verdict's colour */
+.status { display: inline-flex; align-items: center; gap: 4px; flex: none; color: var(--verdict, var(--faint)); font-size: 12px; font-weight: 600; }
+.status svg.icon { width: 13px; height: 13px; stroke-width: 2.6; }
+
+/* the recipe: labelled values in a row, the grind in the accent colour */
+.recipe { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 6px; margin: 12px 0 4px; }
+.recipe-cell { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.recipe-value { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.recipe-grind { color: var(--accent); }
+.recipe-label { color: var(--faint); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Tries (left) and Again (right) */
+.coffee-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.card-link, .card-action { position: relative; display: inline-flex; align-items: center; gap: 4px; padding: 6px 0; font-size: 13px; font-weight: 600; }
+.card-link::after, .card-action::after { content: ""; position: absolute; inset: -6px -8px; }   /* bigger tap area than it looks */
+.card-link { color: var(--muted); }
+.card-link svg.icon { width: 15px; height: 15px; transition: transform 200ms var(--ease); }
+.card-link[aria-expanded="true"] svg.icon { transform: rotate(180deg); }
+.card-action { color: var(--accent); }
+.card-action svg.icon { width: 15px; height: 15px; stroke-width: 2.2; }
+
+/* not made this way yet: one line, the name and the first one */
+.coffee-new { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; }
+
+/* a coffee's tries, opened in place: plain rows inside the card */
+.tries { margin: 4px 0 0; padding: 0; list-style: none; }
+.tries .brew {
+  padding: 10px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.tries .brew:active { background: transparent; }
+.tries .brew-side { flex-direction: row; align-items: center; gap: 8px; }   /* taste and ↻ side by side */
+.brew-when { margin: 4px 0 0; color: var(--faint); font-size: 11.5px; }
+/* try again from this one (each try) */
+.again-button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--accent);
+}
+.again-button svg.icon { width: 16px; height: 16px; }
+.again-button:active { transform: scale(0.9); }
+.tries .more { padding: 6px 0; border-top: 1px solid var(--line); }
+.clear-tries { display: flex; justify-content: center; padding: 10px 0 6px; border-top: 1px solid var(--line); }
+/* small and quiet: it's at the end of the list, not something you're meant to reach for */
+.clear-tries .pill { min-height: 30px; padding: 0 12px; gap: 5px; font-size: 12.5px; }
+.clear-tries .pill svg.icon { width: 14px; height: 14px; }
+
+/* ----- lists ----- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.list-heading {
+  margin: 10px 4px 0;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.list-heading:first-child { margin-top: 0; }
+.more { display: flex; justify-content: center; padding: 8px 0; }
+
+.empty {
+  margin: 0;
+  padding: 40px 16px;
+  color: var(--faint);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* a brew: the coffee, the numbers, a comment; how it tasted on the right */
+.brew {
+  display: flex;
+  gap: 10px;
+  padding: 11px 12px 11px 13px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--verdict, var(--line));
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 160ms;
+}
+.brew:active { background: var(--surface-2); }
+[data-verdict="good"] { --verdict: var(--good); }
+[data-verdict="sour"] { --verdict: var(--sour); }
+[data-verdict="bitter"] { --verdict: var(--bitter); }
+[data-verdict="off"] { --verdict: var(--off); }
+
+.brew-main { flex: 1; min-width: 0; }
+.brew-bean { display: flex; align-items: baseline; gap: 6px; min-width: 0; margin: 0; font-size: 15px; font-weight: 600; }
+.brew-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brew-bag { flex: none; color: var(--faint); font-size: 11.5px; font-weight: 500; }   /* a coffee bought more than once */
+.brew-comment {
+  display: -webkit-box;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: pre-line;
+}
+.brew-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.brew-side time { color: var(--faint); font-size: 11.5px; }
+
+.verdict {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--verdict) 16%, transparent);
+  color: var(--verdict);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* a brew's numbers (js/coffee/specs.js) */
+.specs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin: 3px 0 0; font-size: 13px; }
+.spec { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.spec-grind { font-weight: 700; color: var(--accent); }
+.spec-grind svg.icon { width: 14px; height: 14px; }
+.spec-faint { color: var(--faint); }
+/* the grams (or a pour over's ratio) soft, the time bold: told apart at a glance */
+.spec-grams { color: var(--muted); }
+.spec-time { color: var(--ink); font-weight: 600; }
+/* a bean */
+.bean {
+  padding: 12px 13px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 160ms;
+}
+.bean:active { background: var(--surface-2); }
+.bean.finished { opacity: 0.55; }
+.bean-head { display: flex; align-items: center; gap: 8px; }
+.bean-name { flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 700; }
+.bean-sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.bean-flavor { margin: 2px 0 0; color: var(--accent); font-size: 13px; font-style: italic; }
+.bean-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.bean-meta { flex: 1 1 auto; margin: 0; color: var(--faint); font-size: 12px; }
+.dial-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.dial-chip svg.icon { width: 14px; height: 14px; }
+
+.roast {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--roast);
+  color: var(--accent-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+/* what it was roasted for: an outline next to the roast */
+.roast-for {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.roast[data-roast="light"] { --roast: var(--light); }
+.roast[data-roast="medium"] { --roast: var(--medium); }
+.roast[data-roast="medium-dark"] { --roast: var(--medium-dark); color: var(--ink); }
+.roast[data-roast="dark"] { --roast: var(--dark); color: var(--ink); }
+
+/* ----- first run ----- */
+
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16vh 24px 40px;
+  text-align: center;
+}
+.welcome img { border-radius: 18px; }.welcome h2 { margin: 14px 0 0; font-size: 22px; }
+.welcome p { max-width: 340px; margin: 0 0 18px; color: var(--muted); }
+
+/* ----- the round + at the bottom right: logs a brew (or adds a coffee) ----- */
+
+.fab {
+  position: fixed;
+  right: max(16px, calc((100% - 1240px) / 2 + 16px));
+  bottom: calc(18px + var(--safe-bottom));
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: var(--accent-ink);
+  box-shadow: 0 10px 28px -8px var(--glow), 0 2px 6px rgb(0 0 0 / 0.4);
+  transition: transform 140ms var(--ease);
+}
+.fab svg.icon { width: 28px; height: 28px; stroke-width: 2.4; }
+.fab:active { transform: scale(0.92); }
+
+/* ----- sheets' contents ----- */
+
+/* a brew opens on top of a bean ("Log espresso" in the bean sheet) */
+#brewLayer { z-index: 22; }
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 8px;
+}
+.sheet-title { flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17px; font-weight: 700; }
+.sheet-close { margin-left: auto; padding: 8px 4px; color: var(--accent); font-size: 15px; font-weight: 600; }
+
+.sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 2px 16px calc(20px + var(--safe-bottom));
+  overflow-y: auto;
+}
+.sheet-body > * { flex-shrink: 0; }              /* on short screens it scrolls instead of squashing the fields */
+
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field-label { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.field-label small { color: var(--faint); font-size: 11.5px; font-weight: 500; }
+.field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+.settings-label { margin: 2px 2px -4px; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+
+.note-input, .text-input {
+  width: 100%;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 16px;                               /* 16px or more: iPhones don't zoom in when it's focused */
+}
+.note-input { min-height: 64px; padding: 10px 12px; line-height: 1.4; resize: vertical; }
+.text-input { height: 46px; padding: 0 13px; }
+select.text-input { appearance: none; padding-right: 32px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+input[type="date"].text-input { min-width: 0; }
+.note-input:focus-visible, .text-input:focus-visible { outline: none; border-color: var(--accent); }
+.note-input::placeholder, .text-input::placeholder { color: var(--faint); }
+
+/* brew sheet */
+.time-inputs { display: flex; align-items: center; gap: 4px; }
+.time-inputs .text-input { flex: 1; min-width: 0; }
+.time-colon { color: var(--faint); font-weight: 700; }
+.ratio { display: flex; align-items: center; height: 46px; margin: 0; color: var(--accent); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.last-brew {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+.last-label { color: var(--faint); font-size: 12px; font-weight: 600; }
+.last-brew .specs { margin: 0; }
+.last-hint { display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; color: var(--accent); font-size: 13px; font-weight: 600; }
+.last-hint svg.icon { width: 14px; height: 14px; }
+.hint { margin: -4px 4px 0; color: var(--muted); font-size: 13px; }
+.again-hint { margin: 0; padding: 10px 12px; border-radius: 11px; background: var(--surface-2); color: var(--accent); }
+
+/* bean sheet: how it's been brewing */
+.bean-summary { display: flex; flex-direction: column; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.dial { display: flex; flex-direction: column; gap: 8px; }
+.dial-row { padding: 10px 12px; border-radius: 11px; background: var(--surface-2); }
+.dial-method { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 700; }
+.dial-method svg.icon { width: 16px; height: 16px; color: var(--accent); }
+.dial-note { margin: 3px 0 0; color: var(--faint); font-size: 12px; }
+.dial-cost { margin-left: auto; color: var(--faint); font-size: 12px; font-weight: 500; }
+.dial-label { margin: 8px 0 2px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.good-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.good-list li { padding-left: 10px; border-left: 2px solid var(--good); }
+.good-list .specs { margin: 0; }
+.link { display: block; margin-top: 8px; padding: 4px 0; color: var(--accent); font-size: 13px; font-weight: 600; }
+
+/* brew sheet: the last good settings, when the last brew wasn't */
+.last-good { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.last-good-row { display: flex; align-items: center; gap: 8px; }
+.last-good-row .specs { flex: 1; min-width: 0; margin: 0; }
+.use-good { flex: none; padding: 7px 14px; border-radius: 999px; background: var(--good); color: #052e16; font-size: 13px; font-weight: 700; }
+.log-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.log-row svg.icon { width: 17px; height: 17px; }
+
+.extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.dates { flex: 1 1 100%; margin: 0; color: var(--faint); font-size: 12px; }

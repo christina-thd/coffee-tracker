@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Bean There</title>
+  <link rel="icon" href="img/logo.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <meta name="theme-color" content="#120e0b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bean There">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/coffee.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <h1 class="visually-hidden">Bean There</h1>
+    <!-- only while the connection is down (js/app.js) -->
+    <span class="offline-badge" id="offline" title="Not connected to Home Assistant: changes from other screens show up once it's back"></span>
+
+    <!-- ===== the logo and a greeting (js/coffee/hero.js) ===== -->
+    <header class="hero" id="hero" hidden>
+      <img src="img/logo.svg" alt="" width="26" height="26">
+      <p class="greeting" id="greeting"></p>
+    </header>
+
+    <!-- ===== phones: one tab at a time; wide screens show all three columns ===== -->
+    <div class="segmented tabs" id="tabs" role="tablist" hidden>
+      <button type="button" role="tab" data-tab="espresso">Espresso</button>
+      <button type="button" role="tab" data-tab="pourover">Pour over</button>
+      <button type="button" role="tab" data-tab="beans">Beans</button>
+    </div>
+
+    <main class="board" id="board" hidden>
+      <section class="column" data-tab="espresso">
+        <h2 class="column-head">Espresso</h2>
+        <ul class="list"></ul>
+        <p class="empty"></p>
+      </section>
+      <section class="column" data-tab="pourover">
+        <h2 class="column-head">Pour over</h2>
+        <ul class="list"></ul>
+        <p class="empty"></p>
+      </section>
+      <section class="column" data-tab="beans">
+        <h2 class="column-head">Beans</h2>
+        <ul class="list"></ul>
+        <p class="empty"></p>
+      </section>
+    </main>
+
+    <!-- ===== first run: no beans yet ===== -->
+    <section class="welcome" id="welcome" hidden>
+      <img src="img/logo.svg" alt="" width="72" height="72">
+      <h2>Bean There</h2>
+      <p>Every shot, every pour, every bag — and what worked.</p>
+      <button type="button" class="pill primary" id="firstBean"></button>
+    </section>
+  </div>
+
+  <button type="button" class="fab" id="addButton" hidden></button>
+
+  <!-- ===== a brew: log a new one, or change / delete one ===== -->
+  <div class="layer" id="brewLayer" hidden>
+    <div class="backdrop" data-close></div>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="brewTitle">
+      <div class="grabber" data-drag data-close></div>
+      <div class="sheet-head" data-drag>
+        <h2 class="sheet-title" id="brewTitle"></h2>
+        <button type="button" class="sheet-close" data-close>Close</button>
+      </div>
+      <form class="sheet-body" id="brewForm" autocomplete="off" novalidate>
+        <div class="segmented methods" id="brewMethod" role="radiogroup" aria-label="Method">
+          <button type="button" role="radio" data-method="espresso">Espresso</button>
+          <button type="button" role="radio" data-method="pourover">Pour over</button>
+        </div>
+        <label class="field">
+          <span class="field-label">Coffee</span>
+          <select class="text-input" id="brewBean"></select>
+        </label>
+        <p class="last-brew" id="brewLast" hidden></p>
+        <div class="field-grid">
+          <label class="field">
+            <span class="field-label" id="brewGrindLabel"></span>
+            <input type="text" class="text-input" id="brewGrind" maxlength="20" inputmode="decimal" enterkeyhint="next">
+          </label>
+          <div class="field">
+            <span class="field-label" id="brewTimeLabel"></span>
+            <div class="time-inputs">
+              <input type="text" class="text-input" id="brewMinutes" inputmode="numeric" maxlength="2" placeholder="min" aria-label="Minutes" enterkeyhint="next">
+              <span class="time-colon" id="brewColon">:</span>
+              <input type="text" class="text-input" id="brewSeconds" inputmode="numeric" maxlength="4" aria-label="Seconds" enterkeyhint="next">
+            </div>
+          </div>
+          <label class="field">
+            <span class="field-label">Dose <small>g</small></span>
+            <input type="text" class="text-input" id="brewDose" inputmode="decimal" maxlength="6" enterkeyhint="next">
+          </label>
+          <label class="field">
+            <span class="field-label"><span id="brewOutLabel"></span> <small id="brewOutUnit">g</small></span>
+            <input type="text" class="text-input" id="brewOut" inputmode="decimal" maxlength="7" enterkeyhint="next">
+          </label>
+          <label class="field">
+            <span class="field-label">Temp <small>°C</small></span>
+            <input type="text" class="text-input" id="brewTemp" inputmode="decimal" maxlength="5" enterkeyhint="done">
+          </label>
+          <div class="field">
+            <span class="field-label">Ratio</span>
+            <p class="ratio" id="brewRatio"></p>
+          </div>
+        </div>
+        <p class="settings-label">How was it?</p>
+        <div class="segmented verdicts" id="brewVerdict" role="radiogroup" aria-label="How was it?">
+          <button type="button" role="radio" data-verdict="good">Good</button>
+          <button type="button" role="radio" data-verdict="sour">Sour</button>
+          <button type="button" role="radio" data-verdict="bitter">Bitter</button>
+          <button type="button" role="radio" data-verdict="off">Off</button>
+        </div>
+        <p class="hint" id="brewHint" hidden></p>
+        <textarea class="note-input" id="brewComment" rows="2" maxlength="2000"
+          placeholder="Comments: taste, crema, what you'll change next time…" aria-label="Comments"></textarea>
+        <button type="submit" class="pill primary" id="brewSave"></button>
+        <div class="extra" id="brewExtra">
+          <p class="dates" id="brewDate"></p>
+          <!-- a new try, copied from this one: change what's different -->
+          <button type="button" class="pill" id="brewAgain"></button>
+          <button type="button" class="pill danger" id="brewDelete"></button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- ===== a bean: add a new one, or change / finish / delete one ===== -->
+  <div class="layer" id="beanLayer" hidden>
+    <div class="backdrop" data-close></div>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="beanTitle">
+      <div class="grabber" data-drag data-close></div>
+      <div class="sheet-head" data-drag>
+        <h2 class="sheet-title" id="beanTitle"></h2>
+        <button type="button" class="sheet-close" data-close>Close</button>
+      </div>
+      <form class="sheet-body" id="beanForm" autocomplete="off" novalidate>
+        <p class="hint again-hint" id="beanHint" hidden></p>
+        <!-- an existing bean: how it's been brewing, and log a brew of it -->
+        <div class="bean-summary" id="beanSummary" hidden>
+          <div class="dial" id="beanDial"></div>
+          <div class="log-row">
+            <button type="button" class="pill" data-log="espresso"></button>
+            <button type="button" class="pill" data-log="pourover"></button>
+          </div>
+        </div>
+
+        <label class="field">
+          <span class="field-label">Name</span>
+          <input type="text" class="text-input" id="beanName" maxlength="60" placeholder="e.g. Ethiopia Guji" enterkeyhint="next">
+        </label>
+        <div class="field-grid">
+          <label class="field">
+            <span class="field-label">Roaster</span>
+            <input type="text" class="text-input" id="beanRoaster" maxlength="80" enterkeyhint="next">
+          </label>
+          <label class="field">
+            <span class="field-label">Origin</span>
+            <input type="text" class="text-input" id="beanOrigin" maxlength="80" placeholder="Country, region" enterkeyhint="next">
+          </label>
+          <label class="field">
+            <span class="field-label">Variety</span>
+            <input type="text" class="text-input" id="beanVariety" maxlength="80" placeholder="e.g. Heirloom" enterkeyhint="next">
+          </label>
+          <label class="field">
+            <span class="field-label">Process</span>
+            <select class="text-input" id="beanProcess"></select>
+          </label>
+        </div>
+        <p class="settings-label">Roast</p>
+        <div class="segmented roasts" id="beanRoast" role="radiogroup" aria-label="Roast"></div>
+        <p class="settings-label">Roasted for</p>
+        <div class="segmented" id="beanRoastFor" role="radiogroup" aria-label="Roasted for"></div>
+        <div class="field-grid">
+          <label class="field">
+            <span class="field-label">Roasted on</span>
+            <input type="date" class="text-input" id="beanRoastedOn">
+          </label>
+          <label class="field">
+            <span class="field-label">Bought from</span>
+            <input type="text" class="text-input" id="beanShop" maxlength="80" enterkeyhint="next">
+          </label>
+          <label class="field">
+            <span class="field-label">Price <small id="beanCurrency"></small></span>
+            <input type="text" class="text-input" id="beanPrice" inputmode="decimal" maxlength="8" enterkeyhint="next">
+          </label>
+          <label class="field">
+            <span class="field-label">Bag <small>g</small></span>
+            <input type="text" class="text-input" id="beanWeight" inputmode="decimal" maxlength="6" enterkeyhint="next">
+          </label>
+        </div>
+        <label class="field">
+          <span class="field-label">Tasting notes</span>
+          <input type="text" class="text-input" id="beanFlavor" maxlength="80" placeholder="e.g. Blueberry, jasmine, cocoa" enterkeyhint="done">
+        </label>
+        <textarea class="note-input" id="beanNotes" rows="2" maxlength="2000" placeholder="Notes" aria-label="Notes"></textarea>
+        <button type="submit" class="pill primary" id="beanSave"></button>
+        <div class="extra" id="beanExtra">
+          <!-- a finished bag: add the next one, a copy to check the roast date, price, … -->
+          <button type="button" class="pill" id="beanAgain" hidden></button>
+          <button type="button" class="pill ghost" id="beanFinished"></button>
+          <button type="button" class="pill danger" id="beanDelete"></button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

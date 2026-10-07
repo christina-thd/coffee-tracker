@@ -1,0 +1,15 @@
+{
+  "name": "Bean There",
+  "short_name": "Bean There",
+  "description": "Your coffee beans and every espresso and pour over you brew with them",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#120e0b",
+  "theme_color": "#120e0b",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "img/logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

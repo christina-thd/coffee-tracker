@@ -1,0 +1,27 @@
+name: "Bean There"
+description: "Your coffee beans and every espresso and pour over you brew with them: grind, dose, time and how it tasted"
+version: "1.0.0"
+slug: "coffee_tracker"
+init: false
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+startup: application
+boot: auto
+ingress: true
+ingress_port: 3300
+# Optional direct address (http://<homeassistant-ip>:3300/), e.g. for "Add to Home Screen" on a phone.
+# Not needed for the Home Assistant sidebar or app.
+ports:
+  3300/tcp: 3300
+ports_description:
+  3300/tcp: "Web interface (not needed for the Home Assistant sidebar)"
+panel_icon: "mdi:coffee"
+panel_title: "Bean There"
+options:
+  currency: "€"
+schema:
+  currency: "str?"
