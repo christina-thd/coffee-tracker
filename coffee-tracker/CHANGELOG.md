@@ -3,6 +3,7 @@
 ## 2.0.2
 - Fix sideways movement while scrolling
 - Fix the background above the keyboard while typing
+- Keyboard fix
 
 ## 2.0.1
 - No bag date on tries
