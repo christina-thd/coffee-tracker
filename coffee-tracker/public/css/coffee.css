@@ -312,7 +312,8 @@ body.offline .offline-badge { display: inline-flex; }
   flex-direction: column;
   gap: 12px;
   padding: 2px 16px calc(20px + var(--safe-bottom));
-  overflow-y: auto;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
 }
 .sheet-body > * { flex-shrink: 0; }              /* scroll, don't squash */
 /* Save stays in reach: stuck to the bottom while the form scrolls under it */

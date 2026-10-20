@@ -1,6 +1,6 @@
 name: "Bean There"
 description: "Your coffee beans and every espresso and pour over you brew with them: grind, dose, time and how it tasted"
-version: "2.0.1"
+version: "2.0.2"
 slug: "coffee_tracker"
 init: false
 arch:
