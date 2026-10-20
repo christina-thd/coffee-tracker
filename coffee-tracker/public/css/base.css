@@ -34,8 +34,8 @@
 
   --safe-top: env(safe-area-inset-top, 0px);
   --toast-room: 24px;
-  /* clears the + button and a sheet's Save button */
-  --toast-lift: 92px;
+  /* near the bottom, beside the + button; above a sheet's Save button while one is open */
+  --toast-lift: 26px;
   /* set by js/ui/viewport.js (shrinks with the keyboard) */
   --viewport-top: 0px;
   --viewport-height: 100dvh;
@@ -59,7 +59,8 @@ body {
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
-body.locked { overflow: hidden; }
+body.locked { overflow: hidden; --toast-lift: 84px; }   /* a sheet is open: above its Save button */
+body.locked .toast { max-width: calc(100% - 32px); }
 
 button, input, textarea, select { font: inherit; color: inherit; }
 button { border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
@@ -199,7 +200,7 @@ svg.icon { width: 1.2em; height: 1.2em; flex: none; fill: none; stroke: currentC
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: calc(100% - 32px);
+  max-width: calc(100% - 180px);   /* clear of the + button on both sides, so it stays centred */
   padding: 11px 18px;
   width: max-content;
   border-radius: 22px;
