@@ -66,6 +66,35 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     button.innerHTML = `${icon(method.id)}<span>Log ${method.label.toLowerCase()}</span>`;
   }
 
+  const BAGS = [250, 500, 1000];
+  let bagOther = false;                            // "Other" picked: the grams field shows
+
+  function renderBag() {
+    const grams = parseNumber(weight.value);
+    const selected = bagOther ? 'other' : BAGS.includes(grams) ? String(grams) : null;
+    for (const button of $('beanBag').querySelectorAll('[data-bag]')) {
+      const on = button instanceof HTMLElement && button.dataset.bag === selected;
+      button.classList.toggle('selected', on);
+      button.setAttribute('aria-checked', String(on));
+    }
+    $('beanWeightField').hidden = selected !== 'other';
+  }
+
+  $('beanBag').addEventListener('click', (e) => {
+    const button = closest(e, '[data-bag]');
+    if (!button) return;
+    const wasOn = button.classList.contains('selected');
+    if (button.dataset.bag === 'other') {
+      bagOther = !wasOn;
+      if (BAGS.includes(parseNumber(weight.value)) || wasOn) weight.value = '';
+    } else {
+      bagOther = false;
+      weight.value = wasOn ? '' : button.dataset.bag;   // tap again: not set
+    }
+    renderBag();
+    if (bagOther) weight.focus();
+  });
+
   function renderRoast() {
     for (const button of $('beanRoast').querySelectorAll('[data-roast]')) {
       const selected = button instanceof HTMLElement && button.dataset.roast === roast;
@@ -274,6 +303,8 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     roastedOn.value = existing?.roastedOn ?? '';  // a new bag has its own roast date
     price.value = bean?.price != null ? String(bean.price) : '';
     weight.value = bean?.weight != null ? String(bean.weight) : '';
+    bagOther = bean?.weight != null && !BAGS.includes(bean.weight);
+    renderBag();
     notes.value = bean?.notes ?? '';
     $('beanCurrency').textContent = getCurrency();
     $('beanTitle').textContent = existing ? existing.name : from ? 'Bought again' : 'New coffee';

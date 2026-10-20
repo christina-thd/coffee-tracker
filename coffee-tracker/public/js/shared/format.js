@@ -49,3 +49,6 @@ export function money(value, currency) {
 }
 
 export const num = (value) => String(Math.round(value * 100) / 100);
+
+/** A bag's size: "250g", "1kg". */
+export const bagSize = (grams) => (grams >= 1000 && grams % 1000 === 0 ? `${grams / 1000}kg` : `${num(grams)}g`);

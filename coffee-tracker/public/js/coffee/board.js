@@ -3,7 +3,7 @@ import {
   bagIdsOf, formatDuration, labelOf, latestBrew, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, suits, VERDICTS,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
-import { daysSince, money, num, plural } from '../shared/format.js';
+import { bagSize, daysSince, money, num, plural } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
 import { bagLabel, specsHtml } from './specs.js';
 
@@ -135,8 +135,8 @@ function brewColumnHtml(method, beans, brews, opened, clearing) {
 
 function beanMeta(bean, currency, now) {
   const meta = [];
-  if (bean.price != null) meta.push(money(bean.price, currency) + (bean.weight ? ` / ${num(bean.weight)}g` : ''));
-  else if (bean.weight) meta.push(`${num(bean.weight)}g`);
+  if (bean.price != null) meta.push(money(bean.price, currency) + (bean.weight ? ` / ${bagSize(bean.weight)}` : ''));
+  else if (bean.weight) meta.push(bagSize(bean.weight));
   if (bean.roastedOn && !bean.finished) meta.push(`${plural(daysSince(bean.roastedOn, now), 'day')} off roast`);
   return meta.join(' · ');
 }

@@ -189,11 +189,20 @@
             <span class="field-label">Bought from</span>
             <input type="text" class="text-input" id="beanShop" maxlength="80" enterkeyhint="next">
           </label>
+        </div>
+        <p class="settings-label">Bag</p>
+        <div class="segmented" id="beanBag" role="radiogroup" aria-label="Bag">
+          <button type="button" role="radio" data-bag="250">250g</button>
+          <button type="button" role="radio" data-bag="500">500g</button>
+          <button type="button" role="radio" data-bag="1000">1kg</button>
+          <button type="button" role="radio" data-bag="other">Other</button>
+        </div>
+        <div class="field-grid">
           <label class="field">
             <span class="field-label">Price <small id="beanCurrency"></small></span>
             <input type="text" class="text-input" id="beanPrice" inputmode="decimal" maxlength="8" enterkeyhint="next">
           </label>
-          <label class="field">
+          <label class="field" id="beanWeightField" hidden>
             <span class="field-label">Bag <small>g</small></span>
             <input type="text" class="text-input" id="beanWeight" inputmode="decimal" maxlength="6" enterkeyhint="next">
           </label>
