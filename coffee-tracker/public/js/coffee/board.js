@@ -158,7 +158,6 @@ function beanHtml(bean, beans, brews, currency, now) {
   return `<li class="bean${bean.finished ? ' finished' : ''}" data-bean-open="${bean.id}">
     <div class="bean-head"><p class="bean-name">${escapeHtml(bean.name)}</p>${forHtml}${roast}</div>
     ${sub ? `<p class="bean-sub">${escapeHtml(sub)}</p>` : ''}
-    ${bean.flavor ? `<p class="bean-flavor">${escapeHtml(bean.flavor)}</p>` : ''}
     ${meta || dial ? `<div class="bean-foot"><p class="bean-meta">${meta}</p>${dial}</div>` : ''}
   </li>`;
 }

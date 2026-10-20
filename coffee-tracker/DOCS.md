@@ -70,7 +70,7 @@ Messages at the bottom of the screen say what was done ("Saved", "Deleted"); tap
 
 ## Beans
 
-The Beans tab has a card per bag: its roast, what it was roasted for (a cup for espresso, a dripper for pour over: a coffee roasted for one is only offered for logging that way; the same two buttons at the top right show just the beans for that method, tap again for all), its roaster, origin and process, tasting notes, the price and bag size, how
+The Beans tab has a card per bag: its roast, what it was roasted for (a cup for espresso, a dripper for pour over: a coffee roasted for one is only offered for logging that way; the same two buttons at the top right show just the beans for that method, tap again for all), its roaster, origin and process, the price and bag size, how
 many days it is off roast, and the grind of its sweet spot for espresso and pour over.
 
 Tap a card to open it. At the top is what worked, per kind: the settings that **came out good**, newest first, with
