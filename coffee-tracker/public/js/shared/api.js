@@ -1,5 +1,4 @@
-// Client for the server API. Paths are relative so the app also works behind
-// Home Assistant ingress (served under /api/hassio_ingress/<token>/).
+// Paths are relative so the app works behind Home Assistant ingress.
 
 async function readJson(res) {
   const body = await res.json().catch(() => ({}));
@@ -17,10 +16,7 @@ export async function sendAction(action) {
 }
 
 /**
- * Calls `onView` with the full view on connect and after every change, and `onConnection(true | false)` when the
- * live connection opens or drops (it reconnects by itself).
- * If the server was updated to a new version while the page stayed open, reloads the page
- * so it never runs old code against the new server.
+ * Reloads the page if the server version changes, so old code never runs against a new server.
  * @param {(view: any) => void} onView
  * @param {(connected: boolean) => void} [onConnection]
  */

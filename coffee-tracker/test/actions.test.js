@@ -49,7 +49,7 @@ describe('beans', () => {
     rejects(state, { type: 'editBean', beanId, weight: 1e9 });
     rejects(state, { type: 'editBean', beanId, roastedOn: '2026-02-31' });
     rejects(state, { type: 'editBean', beanId, finished: 'yes' });
-    rejects(state, { type: 'editBean', beanId, name: 'Fine', roaster: 42 });   // nothing is set, not even the name
+    rejects(state, { type: 'editBean', beanId, name: 'Fine', roaster: 42 });
     rejects(state, { type: 'editBean', beanId: 'ghost', name: 'x' }, 404);
   });
 

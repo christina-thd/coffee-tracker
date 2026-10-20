@@ -1,7 +1,4 @@
-// Keeps --viewport-top and --viewport-height on the page equal to the part of the screen you can see,
-// which shrinks when the keyboard opens. Sheets are sized from them (css/base.css), so a sheet you type in
-// sits right above the keyboard instead of sliding under it. Phones without visualViewport keep the
-// CSS fallbacks (the full screen).
+// Tracks the visible viewport so sheets sit above the on-screen keyboard instead of under it.
 
 export function trackVisibleViewport() {
   const viewport = window.visualViewport;

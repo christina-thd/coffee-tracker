@@ -32,10 +32,10 @@ afterEach(() => {
 test('a renewed certificate is loaded into the running server', async () => {
   stop = watchTls(server, config, { intervalMs: 20, logger: silent });
   await wait(80);
-  assert.equal(loads.length, 0);                                     // unchanged: nothing to do
+  assert.equal(loads.length, 0);
 
   const later = new Date(Date.now() + 60_000);
-  fs.utimesSync(config.tlsCert, later, later);                        // "renewed"
+  fs.utimesSync(config.tlsCert, later, later);
   await wait(80);
   assert.equal(loads.length, 1);
   assert.deepEqual(loads[0].cert, fs.readFileSync(config.tlsCert));
@@ -50,7 +50,7 @@ test('a certificate that is being replaced is tried again, and the old one kept 
   fs.utimesSync(config.tlsCert, later, later);
   await wait(80);
   assert.equal(loads.length, 0);
-  fail = false;                                                       // the key has been written too
+  fail = false;
   await wait(80);
   assert.equal(loads.length, 1);
 });

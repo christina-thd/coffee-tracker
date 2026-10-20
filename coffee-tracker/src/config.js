@@ -9,14 +9,7 @@ function parsePort(value) {
   return Number.isInteger(port) && port > 0 && port < 65536 ? port : null;
 }
 
-/**
- * Environment variables (the Home Assistant add-on sets them in run.sh):
- *   PORT        port to listen on (default 3300)
- *   HOST        interface to bind (default all)
- *   STATE_FILE  where beans and brews are saved (default ./data/coffee.json)
- *   CURRENCY    the symbol prices are shown with (default €)
- *   HTTPS_PORT, TLS_CERT, TLS_KEY  also serve https (PEM certificate and key; off unless all three are set)
- */
+// Env vars are set by the Home Assistant add-on's run.sh; https is off unless all three TLS vars are set.
 export function loadConfig(env = process.env) {
   const pkg = JSON.parse(readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8'));
 

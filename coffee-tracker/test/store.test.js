@@ -23,7 +23,7 @@ test('save is debounced, flush writes the latest document and creates folders', 
   const store = new JsonFileStore(file, { debounceMs: 10_000 });
   const doc = { n: 1 };
   store.save(doc);
-  doc.n = 2;                          // serialized at write time
+  doc.n = 2;
   assert.equal(fs.existsSync(file), false);
   store.flush();
   assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')), { n: 2 });

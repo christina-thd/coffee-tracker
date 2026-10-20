@@ -1,4 +1,3 @@
-// Checks that the Home Assistant add-on files agree with each other and with the app.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,11 +37,11 @@ test('the direct ports and the Dockerfile use the same ports as the app', () => 
 });
 
 test("the ssl option uses Home Assistant's certificate", () => {
-  assert.match(config, /^ {2}- ssl:ro$/m);                                      // the ssl folder, read-only
-  assert.match(config, /^ {2}ssl: false$/m);                                    // off unless turned on
+  assert.match(config, /^ {2}- ssl:ro$/m);
+  assert.match(config, /^ {2}ssl: false$/m);
   const run = read('run.sh');
   assert.match(run, /bashio::config\.true 'ssl'/);
-  assert.match(run, /CERTFILE="\/ssl\/\$\{CERTFILE##\*\/\}"/);                  // just the name, in /ssl
+  assert.match(run, /CERTFILE="\/ssl\/\$\{CERTFILE##\*\/\}"/);
   assert.match(run, /KEYFILE="\/ssl\/\$\{KEYFILE##\*\/\}"/);
 });
 
@@ -74,7 +73,7 @@ test('store images are PNGs of the sizes Home Assistant expects', () => {
   const pngSize = (file) => {
     const png = fs.readFileSync(path.join(ROOT_DIR, file));
     assert.equal(png.toString('latin1', 1, 4), 'PNG', `${file} is not a PNG`);
-    return [png.readUInt32BE(16), png.readUInt32BE(20)];   // IHDR width, height
+    return [png.readUInt32BE(16), png.readUInt32BE(20)]; // IHDR width, height
   };
   assert.deepEqual(pngSize('icon.png'), [128, 128]);
   assert.deepEqual(pngSize('logo.png'), [250, 100]);

@@ -1,13 +1,9 @@
-/**
- * Server-Sent Events hub: every open page keeps one connection and receives the full view
- * whenever something changes. A comment line is sent periodically so proxies (and Home
- * Assistant ingress) don't close idle connections.
- */
 export class SseHub {
   #clients = new Set();
   #heartbeat;
 
   constructor({ heartbeatMs = 20_000 } = {}) {
+    // Keeps proxies and Home Assistant ingress from closing idle connections.
     this.#heartbeat = setInterval(() => this.#send(': ping\n\n'), heartbeatMs);
     this.#heartbeat.unref?.();
   }

@@ -1,4 +1,3 @@
-// The helpers shared by the server and the page (public/js/shared/coffee.js).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {

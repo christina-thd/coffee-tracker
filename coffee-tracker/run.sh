@@ -1,19 +1,14 @@
 #!/usr/bin/with-contenv bashio
 
-# Beans and brews are kept in the add-on's persistent /data folder
+# /data persists; PORT must match ingress_port
 export STATE_FILE="/data/coffee.json"
-# Must match ingress_port in config.yaml
 export PORT=3300
 
-# The currency symbol prices are shown with (see DOCS.md)
 if bashio::config.has_value 'currency'; then
     export CURRENCY="$(bashio::config 'currency')"
 fi
 
-# With the "ssl" option: https on a second port with Home Assistant's own certificate (e.g. Let's Encrypt,
-# in the ssl folder), so Android can install the app. It's opened by the certificate's domain name,
-# e.g. https://ha.example.com:3301. The server reloads it by itself when it's renewed.
-# Only the file name counts, so "fullchain.pem", "/ssl/fullchain.pem" and "../../ssl/fullchain.pem" are the same.
+# ssl: https on 3301 with HA's certificate (file name only, always in /ssl)
 if bashio::config.true 'ssl'; then
     CERTFILE="$(bashio::config 'certfile')"
     KEYFILE="$(bashio::config 'keyfile')"

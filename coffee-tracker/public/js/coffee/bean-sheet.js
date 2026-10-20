@@ -1,7 +1,3 @@
-// A bean: adding a new bag, or changing one, marking it finished, or deleting it (with its brews). An existing bean
-// also shows how it's been brewing (the last good espresso and pour over) and logs a brew of it. A finished bag can be
-// bought again: a new bag with the same details, its roast date left to fill in. Saved with the button; closing
-// without it keeps nothing.
 import { sendAction } from '../shared/api.js';
 import {
   bagIdsOf, costOf, goodSettings, latestBrew, METHODS, parseNumber, PROCESSES, ROAST_FOR, ROASTS,
@@ -18,10 +14,10 @@ import { bagLabel, specsHtml } from './specs.js';
 
 const input = (id) => /** @type {HTMLInputElement} */ ($(id));
 
-/** Good settings shown per method before "Show all". */
+/** Good settings shown per method before "See all". */
 const SHOWN_GOOD = 3;
 
-/** The one-line text fields: the bean field each is saved as, and its input. */
+/** Bean field -> input id. */
 const TEXT_FIELDS = Object.freeze({
   name: 'beanName', roaster: 'beanRoaster', origin: 'beanOrigin', variety: 'beanVariety', shop: 'beanShop', flavor: 'beanFlavor',
 });
@@ -29,8 +25,6 @@ const TEXT_FIELDS = Object.freeze({
 /**
  * @param {{ getBeans(): Bean[], getBrews(): Brew[], getCurrency(): string,
  *   onLog(method: string, beanId: string): void, onHistory(method: string, beanId: string): void }} options
- *   onLog: "Log espresso" / "Log pour over" tapped (the brew sheet opens on top)
- *   onHistory: "See all brews" tapped: that method's list, of this coffee
  */
 export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHistory }) {
   const process = /** @type {HTMLSelectElement} */ ($('beanProcess'));
@@ -43,10 +37,10 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   const remove = $('beanDelete');
   let beanId = null;                               // null: a new bean
   let roast = null;
-  let roastFor = null;                             // what it was roasted for (ROAST_FOR)
+  let roastFor = null;
   let armed = false;
   let busy = false;
-  const expanded = new Set();                      // methods whose good settings are all shown
+  const expanded = new Set();                      // methods showing all good settings
 
   const sheet = createSheet($('beanLayer'), {
     onClose: () => {
@@ -78,17 +72,14 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     }
   }
 
-  /**
-   * How a coffee has been brewing, instead of every brew: per method, the settings that came out good with any bag of
-   * it (the newest few; all on request), what a cup costs, and a way to its full list of brews.
-   */
+  /** Per method: good settings across all bags, cost per cup, and a link to all tries. */
   function renderSummary() {
     const bean = getBean();
     $('beanSummary').hidden = !bean;
     if (!bean) return;
     const beans = getBeans();
     const bags = bagIdsOf(beans, bean);
-    const several = bags.size > 1;                 // bought more than once: say which bag each came from
+    const several = bags.size > 1;
     const rows = METHODS.map((m) => {
       const brews = getBrews().filter((b) => b.method === m.id && bags.has(b.beanId));
       if (!brews.length) return '';
@@ -140,7 +131,6 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     remove.innerHTML = `${icon('trash')}<span>${armed ? `Tap again: delete it${count ? ` and its ${plural(count, 'brew')}` : ''}` : 'Delete'}</span>`;
   }
 
-  /** Every field as the server takes it, or an error naming the field. */
   function collect() {
     const fields = Object.fromEntries(Object.entries(TEXT_FIELDS).map(([field, id]) => [field, input(id).value.trim()]));
     if (!fields.name) throw new Error('Give it a name');
@@ -164,14 +154,14 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   $('beanRoast').addEventListener('click', (e) => {
     const button = closest(e, '[data-roast]');
     if (!button) return;
-    roast = button.dataset.roast === roast ? null : button.dataset.roast;   // tap again: not set
+    roast = button.dataset.roast === roast ? null : button.dataset.roast;
     renderRoast();
   });
 
   $('beanRoastFor').addEventListener('click', (e) => {
     const button = closest(e, '[data-roast-for]');
     if (!button) return;
-    roastFor = button.dataset.roastFor === roastFor ? null : button.dataset.roastFor;   // tap again: not set
+    roastFor = button.dataset.roastFor === roastFor ? null : button.dataset.roastFor;
     renderRoast();
   });
 
@@ -208,7 +198,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     const bean = getBean();
     if (!bean) return;
     const done = !bean.finished;
-    // the sheet stays open: a finished bag offers "Bought again" (and "Back in use") right there
+    // stays open so "Bought again" is right there
     sendAction({ type: 'editBean', beanId: bean.id, finished: done })
       .then(() => toast(done ? `${bean.name}: bag finished` : `${bean.name} is back in use`, { icon: 'check' }))
       .catch(toastError);
@@ -228,7 +218,6 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   });
 
   /**
-   * Fills the sheet: an existing bean (`existing`), or a new one, empty or copied from `from` (bought again).
    * @param {Bean | null} existing
    * @param {Bean | null} [from]
    */
@@ -257,7 +246,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     renderExtra();
   }
 
-  // a finished bag bought again: the sheet turns into the new bag (one sheet, so back still closes it)
+  // reuse this sheet for the new bag, so back still closes it
   again.addEventListener('click', () => {
     const bean = getBean();
     if (!bean) return;
@@ -266,19 +255,17 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   });
 
   return {
-    /** Opens for a new bean (no id) or an existing one. */
     open(id = null) {
       const bean = id ? getBeans().find((b) => b.id === id) : null;
       fill(bean ?? null);
       sheet.open();
-      if (!bean) setTimeout(() => input('beanName').focus(), 320);   // after it slides in, so the page doesn't jump
+      if (!bean) setTimeout(() => input('beanName').focus(), 320);   // after the slide-in, so the page doesn't jump
     },
 
     close() {
       sheet.close();
     },
 
-    /** After a change: its brews may differ, or the bean may be gone (deleted on another screen). */
     refresh() {
       if (!sheet.isOpen || !beanId) return;
       if (!getBean()) {

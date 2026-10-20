@@ -50,15 +50,6 @@ function readJsonBody(req) {
 }
 
 /**
- * Builds the request handler.
- *
- *   GET  /                 the coffee tracker
- *   GET  /manifest.webmanifest   web app manifest ("Add to Home Screen" opens it like an app)
- *   GET  /css/*, /js/*, /img/*   static files
- *   GET  /api/info         { version }
- *   GET  /api/events       live view (Server-Sent Events)
- *   POST /api/actions      apply one action, e.g. { "type": "addBrew", "beanId": "…", "method": "espresso", … }
- *
  * @param {{ config: any, state: any, store: any, hub?: SseHub, now?: () => number,
  *   logger?: Pick<Console, 'error'> }} options
  */

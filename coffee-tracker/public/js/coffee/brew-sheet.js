@@ -1,6 +1,4 @@
-// A brew: logging a new one, or changing or deleting one. A new brew starts from the last one of that coffee and
-// method (grind, dose, yield, temperature), so dialing in is changing one number and saying how it tasted. Saved with
-// the button; closing without it keeps nothing.
+// New brews start from the last one of that coffee and method, so finding the sweet spot is changing one number.
 import { sendAction } from '../shared/api.js';
 import { bagIdsOf, labelOf, latestBrew, methodOf, parseNumber, ratio, sameCoffee, VERDICTS } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
@@ -15,7 +13,6 @@ import { bagLabel, specsHtml } from './specs.js';
 
 const input = (id) => /** @type {HTMLInputElement} */ ($(id));
 
-/** A number field's value, or an error naming the field. */
 function numberIn(field, name) {
   const value = parseNumber(field.value);
   if (Number.isNaN(value)) throw new Error(`${name} must be a number`);
@@ -38,8 +35,8 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
   let brewId = null;                               // null: a new brew
   let method = 'espresso';
   let verdict = null;
-  let touched = false;                             // a setting was typed: changing coffee or method keeps it
-  let armed = false;                               // Delete tapped once: the next tap deletes
+  let touched = false;                             // typed settings survive a coffee/method change
+  let armed = false;
   let busy = false;
 
   const sheet = createSheet($('brewLayer'), {
@@ -51,14 +48,12 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
 
   const getBrew = () => getBrews().find((b) => b.id === brewId);
 
-  /** The coffees to pick from: those in use, and the one picked (it may be finished). */
+  /** Beans in use, plus the selected one (it may be finished). */
   function renderBeans(selected) {
     const options = getBeans().filter((b) => !b.finished || b.id === selected);
     bean.innerHTML = options.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}${b.roaster ? ` · ${escapeHtml(b.roaster)}` : ''}</option>`).join('');
     if (options.some((b) => b.id === selected)) bean.value = selected;
   }
-
-  // ----- time: seconds for a shot, minutes and seconds for a pour over -----
 
   function getSeconds() {
     const m = method === 'espresso' ? null : numberIn(minutes, 'Minutes');
@@ -79,8 +74,6 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     }
   }
 
-  // ----- what's shown -----
-
   function renderMethod() {
     const m = methodOf(method);
     for (const button of $('brewMethod').querySelectorAll('[data-method]')) {
@@ -91,7 +84,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     $('brewGrindLabel').textContent = m.grinder;
     $('brewTimeLabel').textContent = m.time;
     $('brewOutLabel').textContent = m.out;
-    $('brewOutUnit').textContent = method === 'espresso' ? 'g' : 'ml';   // water: saved in grams, which is ml
+    $('brewOutUnit').textContent = method === 'espresso' ? 'g' : 'ml';   // saved in grams; 1g water = 1ml
     const espresso = method === 'espresso';
     minutes.hidden = espresso;
     $('brewColon').hidden = espresso;
@@ -119,17 +112,13 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     $('brewRatio').textContent = text || '–';
   }
 
-  /**
-   * The last brew of this coffee and method, to start from (new brews only); for a bag bought again with no brews
-   * yet, the last brew of an earlier bag of it.
-   */
+  /** Falls back to an earlier bag of the same coffee. */
   function lastOfBean() {
     const own = latestBrew(getBrews(), { beanId: bean.value, method });
     if (own) return own;
     return latestBrew(brewsOfBags(), { method });
   }
 
-  /** This method's brews with any bag of the picked coffee. */
   function brewsOfBags() {
     const current = getBeans().find((b) => b.id === bean.value);
     if (!current) return [];
@@ -137,7 +126,6 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     return getBrews().filter((b) => b.method === method && bags.has(b.beanId));
   }
 
-  /** The last brew that came out good with any bag of this coffee: shown, to go back to, when the last one wasn't. */
   const lastGood = () => latestBrew(brewsOfBags(), { verdict: 'good' });
 
   function renderLast() {
@@ -146,7 +134,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     if (!last) return;
     const tasted = last.verdict ? ` <span class="verdict" data-verdict="${last.verdict}">${labelOf(VERDICTS, last.verdict)}</span>` : '';
     const hint = VERDICTS.find((v) => v.id === last.verdict)?.hint;
-    const from = last.beanId === bean.value ? 'Last time' : 'Last bag';   // a bag bought again: its earlier bag's
+    const from = last.beanId === bean.value ? 'Last time' : 'Last bag';
     const good = last.verdict === 'good' ? null : lastGood();
     const goodHtml = good ? `<span class="last-good">
         <span class="last-label">Last good, ${agoText(good.brewedAt)}${good.beanId === bean.value ? '' : ` (${bagLabel(getBeans().find((b) => b.id === good.beanId))})`}</span>
@@ -157,7 +145,6 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       <span class="specs">${specsHtml(last)}${tasted}</span>${hint ? `<span class="last-hint">${icon('grind')}Try to ${hint}</span>` : ''}${goodHtml}`;
   }
 
-  // "Use": the last good brew's settings, to start from
   $('brewLast').addEventListener('click', (e) => {
     const button = closest(e, '[data-use]');
     const good = button && getBrews().find((b) => b.id === button.dataset.use);
@@ -172,9 +159,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
   });
 
   /**
-   * A new try's settings, all of them (time too), so trying again is changing what's different: copied from `from`
-   * (a try picked to start from), else the last try of this coffee and method, else the last of this method (but not
-   * its grind or time: another coffee's).
+   * Copies `from`, else this coffee's last try, else this method's last (minus grind/time: another coffee's).
    * @param {Brew | null} [from]
    */
   function prefill(from = null) {
@@ -191,11 +176,11 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
   }
 
   /**
-   * Fills the sheet for a new try (it isn't shown yet). Returns false when there's no coffee to brew.
+   * Returns false when there's no coffee to brew.
    * @param {{ method: string, beanId?: string | null, from?: Brew | null }} options
    */
   function startNew({ method: startMethod, beanId: wanted = null, from = null }) {
-    // a finished bag of a coffee bought again: the bag in use instead
+    // a finished bag that was bought again: use the bag in use
     const given = getBeans().find((b) => b.id === wanted);
     const inUse = given?.finished ? getBeans().filter((b) => !b.finished && sameCoffee(b, given)).at(-1) : null;
     const beanId = inUse?.id ?? wanted;
@@ -207,7 +192,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     const pick = [beanId, lastBean].find((id) => active.some((b) => b.id === id)) ?? active.at(-1).id;
     renderBeans(pick);
     verdict = null;
-    touched = Boolean(from);                       // copied from a try: changing coffee or method keeps it
+    touched = Boolean(from);
     comment.value = '';
     prefill(from);
     return true;
@@ -218,8 +203,6 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     remove.classList.remove('armed');
     remove.innerHTML = `${icon('trash')}<span>Delete</span>`;
   }
-
-  // ----- events -----
 
   $('brewMethod').addEventListener('click', (e) => {
     const button = closest(e, '[data-method]');
@@ -245,7 +228,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
   $('brewVerdict').addEventListener('click', (e) => {
     const button = closest(e, '[data-verdict]');
     if (!button) return;
-    verdict = button.dataset.verdict === verdict ? null : button.dataset.verdict;   // tap again: not rated
+    verdict = button.dataset.verdict === verdict ? null : button.dataset.verdict;
     renderVerdict();
   });
 
@@ -254,11 +237,9 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       touched = true;
       renderRatio();
     });
-    // the copied value is selected: typing replaces it, no deleting first
     field.addEventListener('focus', () => field.select());
   }
 
-  // an existing try: a new one, starting from it
   $('brewAgain').innerHTML = `${icon('repeat')}<span>Try again from this</span>`;
   $('brewAgain').addEventListener('click', () => {
     const brew = getBrew();
@@ -325,13 +306,12 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     $('brewTitle').textContent = brewId ? methodOf(method).label : `${methodOf(method).label}: new try`;
     $('brewSave').textContent = brewId ? 'Save' : 'Log it';
     $('brewExtra').hidden = !brewId;
-    sheet.open();                                  // already open (Try again from this): stays
+    sheet.open();
   }
 
   const api = {
     /**
-     * Opens for a new try of `method`, of `beanId` (else the coffee last used this way, else the newest), with every
-     * setting copied from `from` (else from the last try of that coffee). Returns false when there's no coffee yet.
+     * Returns false when there's no coffee yet.
      * @param {{ method: string, beanId?: string | null, from?: Brew | null }} options
      */
     open(options) {
@@ -340,7 +320,6 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       return true;
     },
 
-    /** Opens an existing brew. */
     edit(id) {
       const brew = getBrews().find((b) => b.id === id);
       if (!brew) return;
@@ -359,7 +338,6 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       show();
     },
 
-    /** After a change: the coffees may differ, or the brew may be gone (deleted on another screen). */
     refresh() {
       if (!sheet.isOpen) return;
       if (brewId && !getBrew()) {
@@ -369,7 +347,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
         return;
       }
       renderBeans(bean.value);
-      if (!bean.value) sheet.close();              // its coffee was deleted, and there's no other
+      if (!bean.value) sheet.close();
     },
   };
   return api;

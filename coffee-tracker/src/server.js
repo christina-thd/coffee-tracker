@@ -21,7 +21,7 @@ servers[0].listen(config.port, config.host, () => {
   console.log(`  Coffee:   ${config.stateFile} (${state.beans.length} beans, ${state.brews.length} brews)`);
 });
 
-// Optional https, so Android can install the app. http keeps working either way.
+// Optional https so Android can install the app.
 if (config.httpsPort && config.tlsCert && config.tlsKey) {
   try {
     const secure = https.createServer(readTls(config), app.handle);
@@ -34,7 +34,6 @@ if (config.httpsPort && config.tlsCert && config.tlsKey) {
   }
 }
 
-// Save anything pending and close connections before exiting (Ctrl+C, add-on stop).
 function shutdown(signal) {
   console.log(`${signal} received, shutting down`);
   store.flush();

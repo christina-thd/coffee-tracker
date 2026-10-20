@@ -14,14 +14,14 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon',
 };
 
-/** Resolves `relative` inside `root`, or returns null if it would escape it (e.g. `../`). */
+/** Returns null if `relative` would escape `root`. */
 export function resolveInside(root, relative) {
   const base = path.resolve(root);
   const full = path.resolve(base, `.${path.sep}${relative}`);
   return full.startsWith(base + path.sep) ? full : null;
 }
 
-/** Parses a single `bytes=start-end` range. Returns null for none, false if it can't be satisfied. */
+/** Returns null for no range, false if unsatisfiable. */
 function parseRange(header, size) {
   const match = /^bytes=(\d*)-(\d*)$/.exec(header ?? '');
   if (!match || (!match[1] && !match[2])) return null;
@@ -31,17 +31,13 @@ function parseRange(header, size) {
     start = Number(match[1]);
     end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
   } else {
-    start = Math.max(size - Number(match[2]), 0);   // suffix: the last N bytes
+    start = Math.max(size - Number(match[2]), 0);
     end = size - 1;
   }
   return start <= end && start < size ? { start, end } : false;
 }
 
-/**
- * Streams a file with its content type, supporting byte ranges.
- * Calls `onMissing` if the file doesn't exist or its type isn't served.
- * `cacheControl` defaults to always revalidating: the app is updated in place, so updates show up on reload.
- */
+// Defaults to revalidating: the app is updated in place.
 export function sendFile(req, res, file, onMissing, { cacheControl = 'no-cache' } = {}) {
   const type = MIME_TYPES[path.extname(file).toLowerCase()];
   if (!type) return onMissing();

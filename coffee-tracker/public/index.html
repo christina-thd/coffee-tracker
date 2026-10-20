@@ -21,16 +21,13 @@
 <body>
   <div class="app">
     <h1 class="visually-hidden">Bean There</h1>
-    <!-- only while the connection is down (js/app.js) -->
     <span class="offline-badge" id="offline" title="Not connected to Home Assistant: changes from other screens show up once it's back"></span>
 
-    <!-- ===== the logo and a greeting (js/coffee/hero.js) ===== -->
     <header class="hero" id="hero" hidden>
       <img src="img/logo.svg" alt="" width="26" height="26">
       <p class="greeting" id="greeting"></p>
     </header>
 
-    <!-- ===== phones: one tab at a time; wide screens show all three columns ===== -->
     <div class="segmented tabs" id="tabs" role="tablist" hidden>
       <button type="button" role="tab" data-tab="espresso">Espresso</button>
       <button type="button" role="tab" data-tab="pourover">Pour over</button>
@@ -55,7 +52,6 @@
       </section>
     </main>
 
-    <!-- ===== first run: no beans yet ===== -->
     <section class="welcome" id="welcome" hidden>
       <img src="img/logo.svg" alt="" width="72" height="72">
       <h2>Bean There</h2>
@@ -66,7 +62,7 @@
 
   <button type="button" class="fab" id="addButton" hidden></button>
 
-  <!-- ===== a brew: log a new one, or change / delete one ===== -->
+  <!-- brew sheet -->
   <div class="layer" id="brewLayer" hidden>
     <div class="backdrop" data-close></div>
     <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="brewTitle">
@@ -128,7 +124,6 @@
         <button type="submit" class="pill primary" id="brewSave"></button>
         <div class="extra" id="brewExtra">
           <p class="dates" id="brewDate"></p>
-          <!-- a new try, copied from this one: change what's different -->
           <button type="button" class="pill" id="brewAgain"></button>
           <button type="button" class="pill danger" id="brewDelete"></button>
         </div>
@@ -136,7 +131,7 @@
     </section>
   </div>
 
-  <!-- ===== a bean: add a new one, or change / finish / delete one ===== -->
+  <!-- bean sheet -->
   <div class="layer" id="beanLayer" hidden>
     <div class="backdrop" data-close></div>
     <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="beanTitle">
@@ -147,7 +142,6 @@
       </div>
       <form class="sheet-body" id="beanForm" autocomplete="off" novalidate>
         <p class="hint again-hint" id="beanHint" hidden></p>
-        <!-- an existing bean: how it's been brewing, and log a brew of it -->
         <div class="bean-summary" id="beanSummary" hidden>
           <div class="dial" id="beanDial"></div>
           <div class="log-row">
@@ -207,7 +201,6 @@
         <textarea class="note-input" id="beanNotes" rows="2" maxlength="2000" placeholder="Notes" aria-label="Notes"></textarea>
         <button type="submit" class="pill primary" id="beanSave"></button>
         <div class="extra" id="beanExtra">
-          <!-- a finished bag: add the next one, a copy to check the roast date, price, … -->
           <button type="button" class="pill" id="beanAgain" hidden></button>
           <button type="button" class="pill ghost" id="beanFinished"></button>
           <button type="button" class="pill danger" id="beanDelete"></button>

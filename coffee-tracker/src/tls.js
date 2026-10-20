@@ -1,15 +1,12 @@
 import fs from 'node:fs';
 
 /**
- * The https certificate and key (PEM files).
  * @param {{ tlsCert: string, tlsKey: string }} config
  */
 export const readTls = ({ tlsCert, tlsKey }) => ({ cert: fs.readFileSync(tlsCert), key: fs.readFileSync(tlsKey) });
 
 /**
- * Loads a renewed certificate into the running https server, so it never has to be restarted for it
- * (Let's Encrypt certificates from Home Assistant are renewed every couple of months). Checks the files'
- * modification times; until both files are readable and match, it keeps the current one and tries again.
+ * Hot-reloads the certificate when Home Assistant renews it.
  * @param {{ setSecureContext(options: { cert: Buffer, key: Buffer }): void }} server
  * @param {{ tlsCert: string, tlsKey: string }} config
  * @param {{ intervalMs?: number, logger?: { log(message: string): void, warn(message: string): void } }} [options]
@@ -20,7 +17,7 @@ export function watchTls(server, config, { intervalMs = 10 * 60_000, logger = co
     try {
       return `${fs.statSync(config.tlsCert).mtimeMs}:${fs.statSync(config.tlsKey).mtimeMs}`;
     } catch {
-      return null;           // being replaced right now: look again next time
+      return null;           // mid-replace: retry next tick
     }
   };
   let loaded = stamp();
