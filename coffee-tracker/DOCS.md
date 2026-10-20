@@ -74,8 +74,12 @@ them.
 
 ## Beans
 
-The Beans tab has a card per bag: its roast, what it was roasted for (a cup for espresso, a dripper for pour over: a coffee roasted for one is only offered for logging that way; the same two buttons at the top right show just the beans for that method, tap again for all), its roaster, origin and process, your star rating, the price and bag size, how
-many days it is off roast, and the grind of its sweet spot for espresso and pour over.
+The Beans tab has a card per bag: its name, its roaster and how many days it is off roast, and on the right your star
+rating with its roast (a dot in the roast's colour) under it. Everything else is in the bean sheet.
+
+What it was roasted for (espresso, pour over or other) decides where it's offered: a coffee roasted for one is only
+offered for logging that way. The cup and dripper buttons at the top right show just the beans for that method; tap
+again for all.
 
 Tap a card to open it. At the top is what worked, per kind: the settings that **came out good**, newest first, with
 every bag of this coffee. The same settings logged good again say so ("15× good"), and each says which bag it was. The

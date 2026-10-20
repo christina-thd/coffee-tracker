@@ -105,7 +105,7 @@ body.offline .offline-badge { display: inline-flex; }
 .coffee-opens.open { background: var(--surface-2); }
 .coffee.finished { opacity: 0.6; }
 .coffee-head { display: flex; align-items: baseline; gap: 10px; }
-.coffee-head .bean-name { font-size: 16px; }
+.coffee-head .bean-name { flex: 1; min-width: 0; font-size: 16px; }
 .coffee-bag { margin: 1px 0 0; color: var(--faint); font-size: 11.5px; }
 
 .status { display: inline-flex; align-items: center; gap: 4px; flex: none; color: var(--verdict, var(--faint)); font-size: 12px; font-weight: 600; }
@@ -244,48 +244,18 @@ body.offline .offline-badge { display: inline-flex; }
 }
 .bean:active { background: var(--surface-2); }
 .bean.finished { opacity: 0.55; }
-.bean-head { display: flex; align-items: center; gap: 8px; }
-.bean-name { flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 700; }
-.bean-sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
-.bean-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
-.bean-meta { flex: 1 1 auto; margin: 0; color: var(--faint); font-size: 12px; }
-.dial-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--surface-3);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
-}
-.dial-chip svg.icon { width: 14px; height: 14px; }
-
-.roast {
-  flex: none;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: var(--roast);
-  color: var(--accent-ink);
-  font-size: 11.5px;
-  font-weight: 700;
-}
-.roast-for {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--surface-3);
-  color: var(--accent);
-}
-.roast-for svg.icon { width: 15px; height: 15px; }
-.roast[data-roast="light"] { --roast: var(--light); }
-.roast[data-roast="medium"] { --roast: var(--medium); }
-.roast[data-roast="medium-dark"] { --roast: var(--medium-dark); color: var(--ink); }
-.roast[data-roast="dark"] { --roast: var(--dark); color: var(--ink); }
+.bean { display: flex; align-items: center; gap: 12px; }
+.bean-main { flex: 1; min-width: 0; }
+.bean-side { display: flex; flex: none; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; }
+.bean-roast { display: inline-flex; align-items: center; color: var(--muted); font-size: 12px; font-weight: 600; }
+.bean-name { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 700; }
+.bean-sub { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+/* the roast's colour, before its name */
+.roast-dot { width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; background: var(--roast); }
+.roast-dot[data-roast="light"] { --roast: var(--light); }
+.roast-dot[data-roast="medium"] { --roast: var(--medium); }
+.roast-dot[data-roast="medium-dark"] { --roast: var(--medium-dark); }
+.roast-dot[data-roast="dark"] { --roast: var(--dark); box-shadow: 0 0 0 1px var(--line); }
 
 /* ----- first run ----- */
 
@@ -363,7 +333,7 @@ body.offline .offline-badge { display: inline-flex; }
 .stars-input svg.icon { width: 30px; height: 30px; }
 .stars-input > button.on, .stars .on { color: var(--accent); }
 .stars-input > button.on svg.icon, .stars .on svg.icon { fill: currentColor; }
-.stars { display: flex; gap: 1px; margin: 4px 0 0; color: var(--line); }
+.stars { display: flex; flex: none; gap: 1px; color: var(--line); }
 .stars svg.icon { width: 14px; height: 14px; }
 
 /* bean sheet: body, acidity, sweetness, aftertaste as five dots each */

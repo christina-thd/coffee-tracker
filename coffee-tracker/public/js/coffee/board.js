@@ -1,9 +1,9 @@
 // Method tabs: a recipe card per coffee (its sweet spot, else last try). Beans tab: a card per bag.
 import {
-  bagIdsOf, formatDuration, labelOf, latestBrew, MAX_SCORE, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, suits, VERDICTS,
+  bagIdsOf, formatDuration, labelOf, latestBrew, MAX_SCORE, METHODS, ratio, ROASTS, sameCoffee, suits, VERDICTS,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
-import { bagSize, daysSince, money, num, plural } from '../shared/format.js';
+import { daysSince, num, plural } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
 import { bagLabel, specsHtml } from './specs.js';
 
@@ -133,62 +133,50 @@ function brewColumnHtml(method, beans, brews, opened, clearing) {
   return inUse.map(card).join('') + (finished.length ? `<li class="list-heading">Finished</li>${finished.map(card).join('')}` : '');
 }
 
-function beanMeta(bean, currency, now) {
-  const meta = [];
-  if (bean.price != null) meta.push(money(bean.price, currency) + (bean.weight ? ` / ${bagSize(bean.weight)}` : ''));
-  else if (bean.weight) meta.push(bagSize(bean.weight));
-  if (bean.roastedOn && !bean.finished) meta.push(`${plural(daysSince(bean.roastedOn, now), 'day')} off roast`);
-  return meta.join(' · ');
-}
-
-function beanHtml(bean, beans, brews, currency, now) {
-  const sub = [bean.roaster, bean.origin, labelOf(PROCESSES, bean.process)].filter(Boolean).join(' · ');
-  const roast = bean.roast ? `<span class="roast" data-roast="${bean.roast}">${labelOf(ROASTS, bean.roast)}</span>` : '';
-  const roastFor = ROAST_FOR.find((r) => r.id === bean.roastFor);
-  const forHtml = roastFor && roastFor.id !== 'other'
-    ? `<span class="roast-for" title="${roastFor.card}" aria-label="${roastFor.card}">${icon(roastFor.id)}</span>`
-    : '';
-  const bags = bagIdsOf(beans, bean);
-  const ofBags = brews.filter((b) => bags.has(b.beanId));
-  const dial = METHODS.map((m) => {
-    const good = latestBrew(ofBags, { method: m.id, verdict: 'good' });
-    return good?.grind ? `<span class="dial-chip" title="Sweet spot: ${m.label.toLowerCase()}">${icon(m.id)}${escapeHtml(good.grind)}</span>` : '';
-  }).join('');
-  const meta = beanMeta(bean, currency, now);
+/** Two lines: the name and its stars, then roaster · roast · days off roast. The rest is in the bean sheet. */
+function beanHtml(bean, now) {
+  const sub = [
+    bean.roaster,
+    bean.roastedOn && !bean.finished ? `${plural(daysSince(bean.roastedOn, now), 'day')} off roast` : '',
+  ].filter(Boolean).join(' · ');
   const stars = bean.rating
-    ? `<p class="stars" aria-label="${bean.rating} of ${MAX_SCORE} stars">${Array.from({ length: MAX_SCORE }, (_, i) =>
-      `<span class="${i < bean.rating ? 'on' : ''}">${icon('star')}</span>`).join('')}</p>`
+    ? `<span class="stars" aria-label="${bean.rating} of ${MAX_SCORE} stars">${Array.from({ length: MAX_SCORE }, (_, i) =>
+      `<span class="${i < bean.rating ? 'on' : ''}">${icon('star')}</span>`).join('')}</span>`
     : '';
+  const roast = bean.roast ? `<span class="bean-roast"><span class="roast-dot" data-roast="${bean.roast}"></span>${labelOf(ROASTS, bean.roast)}</span>` : '';
+  // on the right: the stars, the roast under them (centred alone)
+  const side = stars || roast ? `<div class="bean-side">${stars}${roast}</div>` : '';
   return `<li class="bean${bean.finished ? ' finished' : ''}" data-bean-open="${bean.id}">
-    <div class="bean-head"><p class="bean-name">${escapeHtml(bean.name)}</p>${forHtml}${roast}</div>
-    ${sub ? `<p class="bean-sub">${escapeHtml(sub)}</p>` : ''}
-    ${stars}
-    ${meta || dial ? `<div class="bean-foot"><p class="bean-meta">${meta}</p>${dial}</div>` : ''}
+    <div class="bean-main">
+      <p class="bean-name">${escapeHtml(bean.name)}</p>
+      ${sub ? `<p class="bean-sub">${escapeHtml(sub)}</p>` : ''}
+    </div>
+    ${side}
   </li>`;
 }
 
 /** `filter`: 'all', or a method: the beans that suit it. */
-function beansHtml(beans, brews, currency, now, filter) {
+function beansHtml(beans, brews, now, filter) {
   const byUse = [...beans].filter((b) => filter === 'all' || suits(b, filter))
     .sort((a, b) => lastUsed(b, brews) - lastUsed(a, brews));
-  const card = (b) => beanHtml(b, beans, brews, currency, now);
+  const card = (b) => beanHtml(b, now);
   const finished = byUse.filter((b) => b.finished);
   return byUse.filter((b) => !b.finished).map(card).join('')
     + (finished.length ? `<li class="list-heading">Finished</li>${finished.map(card).join('')}` : '');
 }
 
 /**
- * @param {{ beans: Bean[], brews: Brew[], currency: string, tab: string, opened: Record<string, number>,
+ * @param {{ beans: Bean[], brews: Brew[], tab: string, opened: Record<string, number>,
  *   clearing?: string | null, beanFilter?: string }} options  keys are "method:beanId"
  */
-export function renderBoard({ beans, brews, currency, tab, opened, clearing = null, beanFilter = 'all' }) {
+export function renderBoard({ beans, brews, tab, opened, clearing = null, beanFilter = 'all' }) {
   const now = Date.now();
   for (const name of TABS) {
     const column = /** @type {HTMLElement} */ ($('board').querySelector(`.column[data-tab="${name}"]`));
     const list = column.querySelector('.list');
     const empty = /** @type {HTMLElement} */ (column.querySelector('.empty'));
     list.innerHTML = name === 'beans'
-      ? beansHtml(beans, brews, currency, now, beanFilter)
+      ? beansHtml(beans, brews, now, beanFilter)
       : brewColumnHtml(name, beans, brews, opened, clearing);
     empty.hidden = list.children.length > 0;
     empty.textContent = name === 'beans' && beans.length

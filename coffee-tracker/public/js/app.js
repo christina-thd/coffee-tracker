@@ -95,7 +95,7 @@ function render() {
   $('welcome').hidden = any;
   for (const id of ['hero', 'tabs', 'board', 'addButton']) $(id).hidden = !any;
   renderHero();
-  renderBoard({ beans, brews, currency, tab, opened, clearing, beanFilter });
+  renderBoard({ beans, brews, tab, opened, clearing, beanFilter });
   const label = tab === 'beans' ? 'Add a coffee' : `Log ${methodOf(tab).label.toLowerCase()}`;
   $('addButton').setAttribute('aria-label', label);
   $('addButton').title = label;
