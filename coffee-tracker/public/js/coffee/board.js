@@ -3,7 +3,7 @@ import {
   bagIdsOf, formatDuration, labelOf, latestBrew, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, suits, VERDICTS,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
-import { clock, dayMonth, daysSince, money, num, plural } from '../shared/format.js';
+import { daysSince, money, num, plural } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
 import { bagLabel, specsHtml } from './specs.js';
 
@@ -27,13 +27,13 @@ const verdictHtml = (verdict) =>
   (verdict ? `<span class="verdict" data-verdict="${verdict}">${labelOf(VERDICTS, verdict)}</span>` : '');
 
 function tryHtml(brew, bean, several, canLog) {
-  const bag = several ? ` · ${bagLabel(bean)}` : '';
+  const bag = several ? `<p class="brew-bag">${bagLabel(bean)}</p>` : '';
   const comment = brew.comment ? `<p class="brew-comment">${escapeHtml(brew.comment)}</p>` : '';
   return `<li class="brew" data-brew="${brew.id}" data-verdict="${brew.verdict ?? 'none'}">
     <div class="brew-main">
       <p class="specs">${specsHtml(brew, { short: true })}</p>
       ${comment}
-      <p class="brew-when">${dayMonth(brew.brewedAt)}, ${clock(brew.brewedAt)}${bag}</p>
+      ${bag}
     </div>
     <div class="brew-side">${verdictHtml(brew.verdict)}
       ${canLog ? `<button type="button" class="again-button" data-again="${brew.id}" aria-label="Try again from this" title="Try again from this">${icon('repeat')}</button>` : ''}
