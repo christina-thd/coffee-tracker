@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.2
+- Fix sideways movement while scrolling
+
 ## 2.0.1
 - No bag date on tries
 
