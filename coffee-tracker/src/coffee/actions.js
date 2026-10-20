@@ -55,9 +55,9 @@ const BEAN_FIELDS = {
   process: (value) => choice(value, PROCESSES, 'process'),
   roast: (value) => choice(value, ROASTS, 'roast'),
   roastFor: (value) => choice(value, ROAST_FOR, 'roastFor'),
-  ...Object.fromEntries(TASTE.map((t) => [t.id, (value) => {
+  ...Object.fromEntries([...TASTE.map((t) => t.id), 'rating'].map((field) => [field, (value) => {
     if (value == null || value === '') return null;
-    if (!isScore(value)) throw new ActionError(`${t.id} must be a whole number from 1 to ${MAX_SCORE}`);
+    if (!isScore(value)) throw new ActionError(`${field} must be a whole number from 1 to ${MAX_SCORE}`);
     return value;
   }])),
   roastedOn: (value) => {

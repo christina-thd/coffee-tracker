@@ -74,13 +74,13 @@ them.
 
 ## Beans
 
-The Beans tab has a card per bag: its roast, what it was roasted for (a cup for espresso, a dripper for pour over: a coffee roasted for one is only offered for logging that way; the same two buttons at the top right show just the beans for that method, tap again for all), its roaster, origin and process, the price and bag size, how
+The Beans tab has a card per bag: its roast, what it was roasted for (a cup for espresso, a dripper for pour over: a coffee roasted for one is only offered for logging that way; the same two buttons at the top right show just the beans for that method, tap again for all), its roaster, origin and process, your star rating, the price and bag size, how
 many days it is off roast, and the grind of its sweet spot for espresso and pour over.
 
 Tap a card to open it. At the top is what worked, per kind: the settings that **came out good**, newest first, with
 every bag of this coffee. The same settings logged good again say so ("15× good"), and each says which bag it was. The
 newest 3 show; **See all** shows the rest. **See all tries** opens that kind's tab with this coffee's tries open. It also shows what a cup costs (price ÷ bag size × dose). **Log espresso** and **Log pour over** log a brew
-of it straight away. Below are all its details, to change and **Save**. **Bag** is the size you bought: 250g, 500g,
+of it straight away. Below are all its details, to change and **Save**. Under the name, rate it from one to five stars (tap the same star again to clear it). **Bag** is the size you bought: 250g, 500g,
 1kg, or **Other** to type the grams. Under **Taste**, score its body (light to
 full), acidity (low to bright), sweetness and aftertaste (short to long) from 1 to 5 by tapping a dot; tap it again to
 clear it.

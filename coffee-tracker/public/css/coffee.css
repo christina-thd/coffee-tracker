@@ -346,6 +346,15 @@ body.offline .offline-badge { display: inline-flex; }
 .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
 .settings-label { margin: 2px 2px -4px; color: var(--muted); font-size: 12.5px; font-weight: 600; }
 
+/* a bean's rating: tappable in its sheet, small on its card */
+.stars-input { display: flex; gap: 6px; margin: -2px 0 0; }
+.stars-input > button { display: grid; place-items: center; width: 40px; height: 40px; color: var(--line); }
+.stars-input svg.icon { width: 30px; height: 30px; }
+.stars-input > button.on, .stars .on { color: var(--accent); }
+.stars-input > button.on svg.icon, .stars .on svg.icon { fill: currentColor; }
+.stars { display: flex; gap: 1px; margin: 4px 0 0; color: var(--line); }
+.stars svg.icon { width: 14px; height: 14px; }
+
 /* bean sheet: body, acidity, sweetness, aftertaste as five dots each */
 .taste { display: flex; flex-direction: column; gap: 4px; padding: 6px 12px; border-radius: 11px; background: var(--surface-2); }
 .taste-row { display: grid; grid-template-columns: 78px 44px 1fr 44px; align-items: center; gap: 6px; min-height: 40px; }

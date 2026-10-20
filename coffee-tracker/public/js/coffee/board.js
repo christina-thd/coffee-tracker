@@ -1,6 +1,6 @@
 // Method tabs: a recipe card per coffee (its sweet spot, else last try). Beans tab: a card per bag.
 import {
-  bagIdsOf, formatDuration, labelOf, latestBrew, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, suits, VERDICTS,
+  bagIdsOf, formatDuration, labelOf, latestBrew, MAX_SCORE, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, suits, VERDICTS,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
 import { bagSize, daysSince, money, num, plural } from '../shared/format.js';
@@ -155,9 +155,14 @@ function beanHtml(bean, beans, brews, currency, now) {
     return good?.grind ? `<span class="dial-chip" title="Sweet spot: ${m.label.toLowerCase()}">${icon(m.id)}${escapeHtml(good.grind)}</span>` : '';
   }).join('');
   const meta = beanMeta(bean, currency, now);
+  const stars = bean.rating
+    ? `<p class="stars" aria-label="${bean.rating} of ${MAX_SCORE} stars">${Array.from({ length: MAX_SCORE }, (_, i) =>
+      `<span class="${i < bean.rating ? 'on' : ''}">${icon('star')}</span>`).join('')}</p>`
+    : '';
   return `<li class="bean${bean.finished ? ' finished' : ''}" data-bean-open="${bean.id}">
     <div class="bean-head"><p class="bean-name">${escapeHtml(bean.name)}</p>${forHtml}${roast}</div>
     ${sub ? `<p class="bean-sub">${escapeHtml(sub)}</p>` : ''}
+    ${stars}
     ${meta || dial ? `<div class="bean-foot"><p class="bean-meta">${meta}</p>${dial}</div>` : ''}
   </li>`;
 }

@@ -6,7 +6,7 @@
  * @typedef {{ id: string, name: string, roaster: string, origin: string, variety: string, process: string | null,
  *   roast: string | null, roastFor: string | null, roastedOn: string | null, shop: string, price: number | null,
  *   weight: number | null, flavor: string, body: number | null, acidity: number | null, sweetness: number | null,
- *   aftertaste: number | null, notes: string, finished: boolean, createdAt: number }} Bean
+ *   aftertaste: number | null, rating: number | null, notes: string, finished: boolean, createdAt: number }} Bean
  * @typedef {{ id: string, beanId: string, method: Method, grind: string, dose: number | null, out: number | null,
  *   seconds: number | null, temp: number | null, verdict: Verdict | null, comment: string, brewedAt: number }} Brew
  */

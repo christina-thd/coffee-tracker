@@ -38,6 +38,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   let beanId = null;                               // null: a new bean
   let roast = null;
   let roastFor = null;
+  let rating = null;
   let taste = {};                                  // body, acidity, sweetness, aftertaste: 1 to 5, or null
   let armed = false;
   let busy = false;
@@ -45,7 +46,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   let shownAs = '';                                // the form as it was filled: anything else is unsaved
 
   const formState = () => JSON.stringify([...Object.values(TEXT_FIELDS).map((id) => input(id).value), process.value, roast,
-    roastFor, roastedOn.value, price.value, weight.value, notes.value, taste]);
+    roastFor, roastedOn.value, price.value, weight.value, notes.value, taste, rating]);
 
   const sheet = createSheet($('beanLayer'), {
     isDirty: () => Boolean(shownAs) && formState() !== shownAs,
@@ -184,6 +185,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
       roast,
       roastFor,
       ...Object.fromEntries(TASTE.map((t) => [t.id, taste[t.id] ?? null])),
+      rating,
       roastedOn: roastedOn.value || null,
       price: numberIn(price, 'Price'),
       weight: numberIn(weight, 'Bag'),
@@ -203,6 +205,25 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     if (!button) return;
     roastFor = button.dataset.roastFor === roastFor ? null : button.dataset.roastFor;
     renderRoast();
+  });
+
+  $('beanRating').innerHTML = Array.from({ length: MAX_SCORE }, (_, i) =>
+    `<button type="button" role="radio" data-rate="${i + 1}" aria-label="${i + 1} of ${MAX_SCORE} stars">${icon('star')}</button>`).join('');
+
+  function renderRating() {
+    for (const star of $('beanRating').querySelectorAll('[data-rate]')) {
+      const n = Number(/** @type {HTMLElement} */ (star).dataset.rate);
+      star.classList.toggle('on', rating != null && n <= rating);
+      star.setAttribute('aria-checked', String(n === rating));
+    }
+  }
+
+  $('beanRating').addEventListener('click', (e) => {
+    const star = closest(e, '[data-rate]');
+    if (!star) return;
+    const n = Number(star.dataset.rate);
+    rating = rating === n ? null : n;              // tap again: not rated
+    renderRating();
   });
 
   $('beanTaste').innerHTML = TASTE.map((t) => `<div class="taste-row" data-taste="${t.id}">
@@ -300,6 +321,8 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     roastFor = bean?.roastFor ?? null;
     taste = Object.fromEntries(TASTE.map((t) => [t.id, bean?.[t.id] ?? null]));
     renderTaste();
+    rating = bean?.rating ?? null;
+    renderRating();
     roastedOn.value = existing?.roastedOn ?? '';  // a new bag has its own roast date
     price.value = bean?.price != null ? String(bean.price) : '';
     weight.value = bean?.weight != null ? String(bean.weight) : '';
