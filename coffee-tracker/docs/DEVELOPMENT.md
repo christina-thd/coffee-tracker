@@ -18,9 +18,10 @@ npm run check       # all three, as the pull request checks do
 | `HOST`       | `0.0.0.0`          | Interface to bind                       |
 | `STATE_FILE` | `data/coffee.json` | Where beans and brews are saved         |
 | `CURRENCY`   | `€`                | The symbol prices are shown with        |
+| `HTTPS_PORT`, `TLS_CERT`, `TLS_KEY` | off | Also serve https (PEM certificate and key, reloaded when renewed); the add-on uses 3301 with Home Assistant's certificate (`ssl` option) |
 
 The server doesn't know about Home Assistant: in the add-on, `run.sh` sets these variables (`CURRENCY` from the
-add-on's `currency` option).
+add-on's `currency` option; the https ones with the `ssl` option, from `certfile` and `keyfile` in `/ssl`).
 
 To try it on your phone while developing, open `http://<your-pc-ip>:3300/` on the same Wi-Fi.
 
@@ -34,8 +35,9 @@ config.yaml, Dockerfile, run.sh     Home Assistant add-on
 README.md, DOCS.md, CHANGELOG.md    add-on store page, Documentation tab, changelog
 
 src/                      server (Node, no framework, no dependencies)
-  server.js               entry point: load config and state, start HTTP, graceful shutdown
+  server.js               entry point: load config and state, start HTTP (and https), graceful shutdown
   config.js               environment variables
+  tls.js                  https certificate: reading it, and reloading it when it's renewed
   app.js                  HTTP routes: page, static files, API
   coffee/state.js         state shape, repairing saved data, the view sent to screens
   coffee/actions.js       every action, validated (the only code that changes state)
@@ -51,9 +53,9 @@ public/                   browser (plain ES modules, no build step)
                           api, dom, format, storage
   js/ui/                  reusable pieces: back (phone back button), sheet (bottom sheets, swipe to close),
                           viewport (keeps sheets above the keyboard), toast (says what was done; no buttons), icons
-  js/coffee/              hero (the logo and a greeting above the tabs),
-                          board (the three tabs: a card per coffee per method, the bags), brew-sheet (log / change a brew),
-                          bean-sheet (add / change / finish a coffee), specs (a brew's numbers on one line)
+  js/coffee/              hero (the greeting above the tabs),
+                          board (the three tabs: a recipe card per coffee per method, the bags), brew-sheet (log / change a brew),
+                          bean-sheet (a coffee's page, and the form to add / change it), specs (a brew's numbers on one line)
 
 test/                     node:test suites
 ```
@@ -79,6 +81,9 @@ brew's `out` is the espresso's yield or the pour over's water, `seconds` its tim
 server just sees `addBean`). Bags with the same name and roaster are the same coffee (`sameCoffee`, `bagIdsOf`):
 filters, good settings (`goodSettings`) and a new bag's first brew look at all of them. Nothing links them in the data.
 
+**Taste** (`TASTE` in `shared/coffee.js`): `body`, `acidity`, `sweetness` and `aftertaste` on each bean, a whole
+number from 1 to `MAX_SCORE` (5) or `null`; `rating` (stars) is the same.
+
 **Saved data** is versioned (`schema`). `normalizeState` repairs anything odd in the file on load
 (unknown values fall back to empty; beans without a name and brews without a known bean or method are dropped), so a
 bad edit can't break the app.
@@ -93,7 +98,10 @@ shows; above, all three sit side by side and the tabs hide (`css/coffee.css`).
 settings, not a diary: the "sweet spot" is a coffee's last brew that came out good (per method, with any bag of it), and
 there are no counts of cups or brews.
 
-**Remembered per device** (localStorage, `js/shared/storage.js`): the tab.
+**Remembered per device** (localStorage, `js/shared/storage.js`): the tab and the Beans filter.
+
+**Unsaved changes:** a sheet's `isDirty` compares the form with how it was when it opened; closing a changed one
+turns Close into "Discard changes?" first (`js/ui/sheet.js`). Saving and deleting close without asking.
 
 **Back button:** opening a sheet adds a history entry, so the phone's back button (and the Home Assistant app's)
 closes it instead of leaving the page (`js/ui/back.js`). The brew sheet can open on top of the bean sheet.

@@ -12,7 +12,7 @@ export const storage = {
       if (value == null) localStorage.removeItem(key);
       else localStorage.setItem(key, value);
     } catch {
-      // not available: the setting just won't be remembered
+      // not available
     }
   },
 };

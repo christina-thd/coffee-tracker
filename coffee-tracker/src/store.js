@@ -1,11 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-/**
- * Keeps one JSON document on disk. save() is debounced, so a burst of taps is one write; writes go to a temp
- * file renamed over the real one, so a crash mid-write can't leave a half-written file; a file that can't be
- * parsed is kept aside as `<name>.corrupt-<time>`, not lost.
- */
+// Debounced, atomic (temp + rename) writes; an unparseable file is moved aside, not lost.
 export class JsonFileStore {
   #file;
   #debounceMs;
@@ -23,7 +19,6 @@ export class JsonFileStore {
     this.#logger = logger;
   }
 
-  /** Returns the parsed document, or null if there is none (yet). */
   load() {
     let text;
     try {
@@ -42,7 +37,6 @@ export class JsonFileStore {
     }
   }
 
-  /** Schedules a write. The document is serialized when the write happens, so it's always the latest. */
   save(document) {
     this.#pending = document;
     clearTimeout(this.#timer);
@@ -50,7 +44,6 @@ export class JsonFileStore {
     this.#timer.unref?.();
   }
 
-  /** Writes any scheduled change right now (used on shutdown). */
   flush() {
     clearTimeout(this.#timer);
     if (!this.#pending) return;

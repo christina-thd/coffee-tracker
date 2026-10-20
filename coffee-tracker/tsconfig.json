@@ -1,6 +1,5 @@
 {
-  // Type checking only (npm run typecheck): the plain JavaScript is checked using its JSDoc comments.
-  // Nothing is compiled or emitted; the add-on still runs the files as they are.
+  // type checking only: JSDoc, nothing emitted
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
@@ -10,8 +9,6 @@
     "moduleResolution": "NodeNext",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["node"],
-    // not strict: no types required on every parameter, no null checks on every lookup; it catches real
-    // mismatches (a wrong property, a missing argument) without rewriting the code around types
     "strict": false,
     "skipLibCheck": true
   },

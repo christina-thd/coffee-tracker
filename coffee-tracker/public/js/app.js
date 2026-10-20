@@ -1,6 +1,4 @@
-// Entry point: keeps the latest beans and brews from the server and hands them to the views: the greeting, the tabs
-// (espresso, pour over, beans) and the sheets. The server is the only source of truth; views never
-// change anything locally, they send actions.
+// The server is the only source of truth: views never change state locally, they send actions.
 import { createBeanSheet } from './coffee/bean-sheet.js';
 import { cardBagOf, PAGE, renderBoard, TABS, wireBoard } from './coffee/board.js';
 import { createBrewSheet } from './coffee/brew-sheet.js';
@@ -20,9 +18,9 @@ let beans = [];
 let brews = [];
 let currency = '€';
 let loaded = false;
-// what you were looking at, remembered on this device
 let tab = TABS.includes(storage.get('coffee.tab')) ? storage.get('coffee.tab') : 'espresso';
-let opened = {};                                 // per "method:beanId" (a coffee's card), how many tries show
+let beanFilter = ['espresso', 'pourover'].includes(storage.get('coffee.beanFilter')) ? storage.get('coffee.beanFilter') : 'all';
+let opened = {};                                 // "method:beanId" -> how many tries show
 
 const brewSheet = createBrewSheet({
   getBeans: () => beans,
@@ -34,7 +32,6 @@ const beanSheet = createBeanSheet({
   getBrews: () => brews,
   getCurrency: () => currency,
   onLog: (method, beanId) => openBrew(method, beanId),
-  // "See all tries" in a bean: that method's tab, with this coffee's tries open (the sheet closes first: one step back)
   onHistory: (method, beanId) => {
     beanSheet.close();
     const bean = beans.find((b) => b.id === beanId);
@@ -54,7 +51,6 @@ function setTab(name) {
   window.scrollTo(0, 0);
 }
 
-/** A coffee's tries: open (its newest PAGE) or closed again. */
 function toggleTries(method, beanId) {
   const key = `${method}:${beanId}`;
   const { [key]: shown, ...rest } = opened;
@@ -62,9 +58,8 @@ function toggleTries(method, beanId) {
   render();
 }
 
-// "Delete all tries": the first tap asks (for a few seconds), a second one deletes every try of that coffee made that
-// way, with every bag of it
-let clearing = null;                             // "method:beanId" asking, or null
+// First tap asks to confirm for a few seconds; a second tap deletes.
+let clearing = null;
 let clearTimer = null;
 function clearTries(method, beanId) {
   const key = `${method}:${beanId}`;
@@ -80,7 +75,7 @@ function clearTries(method, beanId) {
   clearing = null;
   const bean = beans.find((b) => b.id === beanId);
   if (!bean) return render();
-  opened = { ...opened };                        // nothing left to show: closed
+  opened = { ...opened };
   delete opened[key];
   sendAction({ type: 'clearBrews', beanIds: [...bagIdsOf(beans, bean)], method })
     .then(() => toast('All tries deleted', { icon: 'trash' }))
@@ -88,7 +83,6 @@ function clearTries(method, beanId) {
   render();
 }
 
-/** "Show older" in a coffee's tries. */
 function showOlder(method, beanId) {
   const key = `${method}:${beanId}`;
   opened = { ...opened, [key]: (opened[key] ?? 0) + PAGE };
@@ -100,27 +94,24 @@ function render() {
   const any = beans.length > 0;
   $('welcome').hidden = any;
   for (const id of ['hero', 'tabs', 'board', 'addButton']) $(id).hidden = !any;
-  renderHero();
-  renderBoard({ beans, brews, currency, tab, opened, clearing });
+  renderHero(brews);
+  renderBoard({ beans, brews, tab, opened, clearing, beanFilter });
   const label = tab === 'beans' ? 'Add a coffee' : `Log ${methodOf(tab).label.toLowerCase()}`;
   $('addButton').setAttribute('aria-label', label);
   $('addButton').title = label;
 }
 
-/** A new brew of `method`; with no coffee to brew yet, adding one comes first. */
+/** With no coffee to brew yet, adding one comes first. */
 function openBrew(method, beanId = null) {
   if (brewSheet.open({ method, beanId })) return;
-  toast('Add a coffee first');
+  toast(beans.some((b) => !b.finished) ? `No coffee for ${methodOf(method).label.toLowerCase()} yet` : 'Add a coffee first');
   beanSheet.open();
 }
 
-/** The + button: a coffee on the Beans tab, else a brew of the tab's method (of the coffee brewed last). */
 function openAdd() {
   if (tab === 'beans') return beanSheet.open();
   openBrew(tab);
 }
-
-// ----- start -----
 
 trackVisibleViewport();
 addTabIcons(document);
@@ -139,14 +130,18 @@ wireBoard({
   onTries: toggleTries,
   onOlder: showOlder,
   onClear: clearTries,
+  onBeanFilter: (filter) => {
+    beanFilter = filter;
+    storage.set('coffee.beanFilter', filter);
+    render();
+  },
   onOpenBrew: (id) => brewSheet.edit(id),
   onOpenBean: (id) => beanSheet.open(id),
 });
 
-// On a PC: Escape closes the open sheet (like the back button); "n" or "+" opens the + button's sheet
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (e.repeat) return;                          // held down: one sheet, not everything behind it
+    if (e.repeat) return;                          // held down: close one sheet, not all
     return closeTopSheet();
   }
   if (e.key !== 'n' && e.key !== '+') return;
@@ -157,7 +152,7 @@ document.addEventListener('keydown', (e) => {
   openAdd();
 });
 
-// "Good morning", "2d ago" and "3 days off roast" stay right while the page is open
+// keep relative times fresh
 setInterval(render, 60_000);
 
 subscribe((view) => {
@@ -170,8 +165,7 @@ subscribe((view) => {
   beanSheet.refresh();
 }, showConnection);
 
-// The live connection drops now and then (phone screen off, switching apps, Wi-Fi): it reconnects by itself, so
-// "Offline" only shows when it's been down a few seconds.
+// Brief drops reconnect by themselves: only show "Offline" after a few seconds.
 let offlineTimer = null;
 function showConnection(connected) {
   clearTimeout(offlineTimer);

@@ -1,19 +1,14 @@
-// Bottom sheets. The page needs, per sheet:
-//   <div class="layer" hidden><div class="backdrop" data-close></div><section class="sheet">…</section></div>
-// Sheets can stack (a project's sheet opens on top of the project list); the back button, or closeTopSheet(),
-// closes the top one.
-// [data-close] closes it on tap; dragging [data-drag] (its top) down far enough, or flicking it, does too.
+// Stackable bottom sheets: [data-close] closes on tap, dragging [data-drag] down closes too.
 import { closest } from '../shared/dom.js';
 import { goBack, pushBack } from './back.js';
 
-const DRAG_START_PX = 8;            // movement before a touch counts as a drag (so taps still work)
+const DRAG_START_PX = 8;            // so taps still work
 const CLOSE_DISTANCE_PX = 110;
-const CLOSE_SPEED = 0.6;            // px per ms: a quick flick closes even when short
+const CLOSE_SPEED = 0.6;            // px per ms
 
-let open = 0;                       // sheets open right now: the page doesn't scroll behind them
-const stack = [];                   // the open sheets, newest last
+let open = 0;
+const stack = [];
 
-/** Swipe down to close: the sheet follows the finger, then closes or springs back. */
 function enableDragToClose(panel, close) {
   let drag = null;
   let justDragged = false;
@@ -30,9 +25,9 @@ function enableDragToClose(panel, close) {
       if (dy < DRAG_START_PX) return;
       drag.moved = true;
       try {
-        panel.setPointerCapture(e.pointerId);        // keep following the finger outside the handle
+        panel.setPointerCapture(e.pointerId);
       } catch {
-        // the pointer is already gone: the drag still works while it's over the sheet
+        // the pointer is already gone
       }
       panel.classList.add('dragging');
       /** @type {HTMLElement} */ (document.activeElement)?.blur?.();   // hide the keyboard
@@ -50,10 +45,10 @@ function enableDragToClose(panel, close) {
     panel.classList.remove('dragging');
     const speed = dy / Math.max(1, e.timeStamp - startTime);
     if (dy > CLOSE_DISTANCE_PX || speed > CLOSE_SPEED) {
-      panel.style.transform = 'translateY(100%)';    // carry on sliding down from where the finger left it
+      panel.style.transform = 'translateY(100%)';
       close();
     } else {
-      panel.style.transform = '';                    // spring back
+      panel.style.transform = '';
     }
   }
   panel.addEventListener('pointerup', end);
@@ -67,16 +62,50 @@ function enableDragToClose(panel, close) {
   }, true);
 }
 
+const DISCARD_MS = 3000;
+
 /**
+ * With unsaved changes (`isDirty`), any way of closing asks first: Close turns into "Discard changes?" for a few
+ * seconds, and closing again then discards.
  * @param {HTMLElement} layer
- * @param {{ onClose?: () => void }} [options]  onClose: called when it starts closing
+ * @param {{ onClose?: () => void, isDirty?: () => boolean }} [options]
  */
-export function createSheet(layer, { onClose } = {}) {
+export function createSheet(layer, { onClose, isDirty } = {}) {
   const panel = /** @type {HTMLElement} */ (layer.querySelector('.sheet'));
+  const closeButton = /** @type {HTMLElement | null} */ (panel.querySelector('.sheet-close'));
+  const closeLabel = closeButton?.textContent ?? '';
   let isOpen = false;
-  let closing = false;              // going back is asynchronous: don't go back twice
+  let closing = false;              // going back is async: don't go back twice
+  let leaving = false;              // this close was allowed: hide() mustn't block it
+  let discard = null;               // the "Discard changes?" timer while it's asking
+
+  function disarm() {
+    clearTimeout(discard);
+    discard = null;
+    if (!closeButton) return;
+    closeButton.textContent = closeLabel;
+    closeButton.classList.remove('armed');
+  }
+
+  /** True if this close has to wait: unsaved changes, and not asked yet. */
+  function blocked() {
+    if (discard || !isDirty?.()) return false;
+    discard = setTimeout(disarm, DISCARD_MS);
+    if (closeButton) {
+      closeButton.textContent = 'Discard changes?';
+      closeButton.classList.add('armed');
+    }
+    panel.style.transform = '';     // a swipe springs back
+    return true;
+  }
 
   function hide() {
+    if (!leaving && blocked()) {
+      pushBack(hide);               // the phone's back button: stay open
+      return;
+    }
+    leaving = false;
+    disarm();
     isOpen = false;
     closing = false;
     stack.splice(stack.indexOf(sheet), 1);
@@ -88,7 +117,7 @@ export function createSheet(layer, { onClose } = {}) {
       panel.style.transform = '';
     };
     panel.addEventListener('transitionend', done, { once: true });
-    setTimeout(done, 400);                          // in case the transition doesn't run
+    setTimeout(done, 400);                          // if transitionend never fires
     onClose?.();
   }
 
@@ -106,14 +135,19 @@ export function createSheet(layer, { onClose } = {}) {
       document.body.classList.add('locked');
       panel.style.transform = '';
       layer.hidden = false;
-      void panel.offsetHeight;                      // apply the closed position first, so it slides in
+      void panel.offsetHeight;                      // force reflow so it slides in
       layer.classList.add('open');
     },
 
-    /** Closes through history, so the entry added by open() goes away too. */
-    close() {
+    /**
+     * Closes through history, so open()'s entry goes away too. `force`: after saving or deleting, nothing to ask.
+     * @param {{ force?: boolean }} [options]
+     */
+    close({ force = false } = {}) {
       if (!isOpen || closing) return;
+      if (!force && blocked()) return;
       closing = true;
+      leaving = true;
       goBack();
     },
   };
@@ -126,7 +160,6 @@ export function createSheet(layer, { onClose } = {}) {
   return sheet;
 }
 
-/** Closes the sheet on top, if one is open (Escape on a PC). Safe to call repeatedly: one close at a time. */
 export function closeTopSheet() {
   stack.at(-1)?.close();
 }

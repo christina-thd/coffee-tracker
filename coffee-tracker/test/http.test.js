@@ -90,7 +90,7 @@ describe('pages and static files', () => {
     const res = await fetch(`${base}/manifest.webmanifest`);
     assert.match(res.headers.get('content-type'), /application\/manifest\+json/);
     const manifest = await res.json();
-    assert.equal(manifest.start_url, './');                // relative: works behind Home Assistant ingress
+    assert.equal(manifest.start_url, './'); // relative for HA ingress
     for (const icon of manifest.icons) assert.equal((await fetch(`${base}/${icon.src}`)).status, 200, icon.src);
   });
 
@@ -150,7 +150,7 @@ describe('live updates', () => {
     const controller = new AbortController();
     const res = await fetch(`${base}/api/events`, { signal: controller.signal });
     const reader = res.body.getReader();
-    await reader.read();                                       // the view on connect
+    await reader.read();
     await post({ type: 'addBean', name: 'Live' });
     const { value } = await reader.read();
     controller.abort();

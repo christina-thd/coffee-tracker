@@ -1,6 +1,6 @@
 name: "Bean There"
 description: "Your coffee beans and every espresso and pour over you brew with them: grind, dose, time and how it tasted"
-version: "1.0.0"
+version: "2.0.0"
 slug: "coffee_tracker"
 init: false
 arch:
@@ -13,15 +13,25 @@ startup: application
 boot: auto
 ingress: true
 ingress_port: 3300
-# Optional direct address (http://<homeassistant-ip>:3300/), e.g. for "Add to Home Screen" on a phone.
-# Not needed for the Home Assistant sidebar or app.
+# 3300 must match ingress_port; direct access is optional
 ports:
   3300/tcp: 3300
+  3301/tcp: 3301
 ports_description:
   3300/tcp: "Web interface (not needed for the Home Assistant sidebar)"
+  3301/tcp: "Secure web interface, with the ssl option (to install it as an app on Android)"
+# read-only: only HA's certificate is read from it
+map:
+  - ssl:ro
 panel_icon: "mdi:coffee"
 panel_title: "Bean There"
 options:
   currency: "€"
+  ssl: false
+  certfile: fullchain.pem
+  keyfile: privkey.pem
 schema:
   currency: "str?"
+  ssl: bool
+  certfile: str
+  keyfile: str

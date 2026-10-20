@@ -1,17 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import {
   idsOf, isDate, LIMITS, MAX_BEANS, MAX_BREWS, MAX_GRIND, MAX_NAME, MAX_NOTE, MAX_TEXT, METHOD_IDS, PROCESSES, ROAST_FOR,
-  ROASTS, VERDICTS,
+  ROASTS, TASTE, isScore, VERDICTS,
 } from '../../public/js/shared/coffee.js';
 
-/**
- * What's saved to disk (JSON): { schema, beans, brews }.
- *   beans  Bean[] (public/js/shared/coffee.js), in the order they were added
- *   brews  Brew[], each made with one bean
- */
 export const SCHEMA_VERSION = 1;
 
-/** A bean's one-line text fields (the name and notes have their own limits). */
 export const BEAN_TEXT_FIELDS = Object.freeze(['roaster', 'origin', 'variety', 'shop', 'flavor']);
 
 const ID = /^[a-f0-9]{1,32}$/;
@@ -26,14 +20,12 @@ export function createInitialState() {
 export const findBean = (state, beanId) => state.beans.find((b) => b.id === beanId);
 export const findBrew = (state, brewId) => state.brews.find((b) => b.id === brewId);
 
-/** Text trimmed to `max` characters; '' for anything that isn't text. Line breaks are kept only when `multiline`. */
 export function cleanText(value, max, { multiline = false } = {}) {
   if (typeof value !== 'string') return '';
   const text = multiline ? value.replace(/\r\n?/g, '\n') : value.replace(/\s+/g, ' ');
   return text.trim().slice(0, max).trim();
 }
 
-/** A number from 0 to `max`, to two decimals; null for anything else. */
 export function cleanNumber(value, max) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max
     ? Math.round(value * 100) / 100
@@ -43,7 +35,6 @@ export function cleanNumber(value, max) {
 const pick = (value, list) => (idsOf(list).includes(value) ? value : null);
 const toTime = (value, fallback) => (Number.isFinite(value) && value > 0 ? Math.trunc(value) : fallback);
 
-/** A bean with nothing filled in yet (actions fill it in). */
 export function emptyBean(now) {
   return {
     id: newId(),
@@ -52,6 +43,8 @@ export function emptyBean(now) {
     process: null,
     roast: null,
     roastFor: null,
+    ...Object.fromEntries(TASTE.map((t) => [t.id, null])),
+    rating: null,
     roastedOn: null,
     price: null,
     weight: null,
@@ -61,7 +54,6 @@ export function emptyBean(now) {
   };
 }
 
-/** A brew with nothing filled in yet. */
 export function emptyBrew(now) {
   return {
     id: newId(),
@@ -88,7 +80,9 @@ function normalizeBean(raw, now) {
     ...Object.fromEntries(BEAN_TEXT_FIELDS.map((field) => [field, cleanText(raw[field], MAX_TEXT)])),
     process: pick(raw.process, PROCESSES),
     roast: pick(raw.roast, ROASTS),
-    roastFor: pick(raw.roastFor, ROAST_FOR),         // saved before there was one: null
+    roastFor: pick(raw.roastFor, ROAST_FOR),
+    ...Object.fromEntries(TASTE.map((t) => [t.id, isScore(raw[t.id]) ? raw[t.id] : null])),
+    rating: isScore(raw.rating) ? raw.rating : null,
     roastedOn: isDate(raw.roastedOn) ? raw.roastedOn : null,
     price: cleanNumber(raw.price, LIMITS.price),
     weight: cleanNumber(raw.weight, LIMITS.weight),
@@ -115,13 +109,11 @@ function normalizeBrew(raw, now, beanIds) {
   };
 }
 
-/** The list without entries whose id came earlier (the first one is kept). */
 function unique(list) {
   const seen = new Set();
   return list.filter((x) => !seen.has(x.id) && Boolean(seen.add(x.id)));
 }
 
-/** Turns whatever was read from disk into a valid current-schema state (unusable entries are dropped). */
 export function normalizeState(raw, now = Date.now()) {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.beans)) return createInitialState();
   const beans = unique(raw.beans.map((b) => normalizeBean(b, now)).filter(Boolean)).slice(0, MAX_BEANS);
@@ -131,7 +123,6 @@ export function normalizeState(raw, now = Date.now()) {
 }
 
 /**
- * What every screen receives.
  * @param {{ version: string, currency: string }} config
  */
 export function toView(state, config) {

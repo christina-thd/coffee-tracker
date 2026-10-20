@@ -21,16 +21,17 @@
 <body>
   <div class="app">
     <h1 class="visually-hidden">Bean There</h1>
-    <!-- only while the connection is down (js/app.js) -->
     <span class="offline-badge" id="offline" title="Not connected to Home Assistant: changes from other screens show up once it's back"></span>
 
-    <!-- ===== the logo and a greeting (js/coffee/hero.js) ===== -->
     <header class="hero" id="hero" hidden>
       <img src="img/logo.svg" alt="" width="26" height="26">
       <p class="greeting" id="greeting"></p>
+      <div class="bean-filter" id="beanFilter" role="group" aria-label="Show beans for" hidden>
+        <button type="button" data-bean-filter="espresso" aria-pressed="false" aria-label="Espresso beans" title="Espresso beans"></button>
+        <button type="button" data-bean-filter="pourover" aria-pressed="false" aria-label="Pour over beans" title="Pour over beans"></button>
+      </div>
     </header>
 
-    <!-- ===== phones: one tab at a time; wide screens show all three columns ===== -->
     <div class="segmented tabs" id="tabs" role="tablist" hidden>
       <button type="button" role="tab" data-tab="espresso">Espresso</button>
       <button type="button" role="tab" data-tab="pourover">Pour over</button>
@@ -55,18 +56,17 @@
       </section>
     </main>
 
-    <!-- ===== first run: no beans yet ===== -->
     <section class="welcome" id="welcome" hidden>
       <img src="img/logo.svg" alt="" width="72" height="72">
       <h2>Bean There</h2>
-      <p>Every shot, every pour, every bag — and what worked.</p>
+      <p>Every shot, every pour, every bag.</p>
       <button type="button" class="pill primary" id="firstBean"></button>
     </section>
   </div>
 
   <button type="button" class="fab" id="addButton" hidden></button>
 
-  <!-- ===== a brew: log a new one, or change / delete one ===== -->
+  <!-- brew sheet -->
   <div class="layer" id="brewLayer" hidden>
     <div class="backdrop" data-close></div>
     <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="brewTitle">
@@ -128,7 +128,6 @@
         <button type="submit" class="pill primary" id="brewSave"></button>
         <div class="extra" id="brewExtra">
           <p class="dates" id="brewDate"></p>
-          <!-- a new try, copied from this one: change what's different -->
           <button type="button" class="pill" id="brewAgain"></button>
           <button type="button" class="pill danger" id="brewDelete"></button>
         </div>
@@ -136,78 +135,104 @@
     </section>
   </div>
 
-  <!-- ===== a bean: add a new one, or change / finish / delete one ===== -->
+  <!-- bean sheet: a page to read (an existing coffee), or the form (Edit, or a new one) -->
   <div class="layer" id="beanLayer" hidden>
     <div class="backdrop" data-close></div>
     <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="beanTitle">
       <div class="grabber" data-drag data-close></div>
       <div class="sheet-head" data-drag>
         <h2 class="sheet-title" id="beanTitle"></h2>
+        <button type="button" class="sheet-edit" id="beanEdit" hidden>Edit</button>
         <button type="button" class="sheet-close" data-close>Close</button>
       </div>
       <form class="sheet-body" id="beanForm" autocomplete="off" novalidate>
         <p class="hint again-hint" id="beanHint" hidden></p>
-        <!-- an existing bean: how it's been brewing, and log a brew of it -->
-        <div class="bean-summary" id="beanSummary" hidden>
-          <div class="dial" id="beanDial"></div>
-          <div class="log-row">
+
+        <div class="bean-view" id="beanView" hidden>
+          <p class="view-line" id="viewLine"></p>
+          <div class="stars-input stars-quick" id="viewRating" role="radiogroup" aria-label="Rating"></div>
+          <div class="log-row" id="beanLogRow">
             <button type="button" class="pill" data-log="espresso"></button>
             <button type="button" class="pill" data-log="pourover"></button>
           </div>
+          <button type="button" class="fold" id="beanDialToggle" aria-expanded="false"></button>
+          <div class="bean-summary" id="beanSummary" hidden>
+            <div class="dial" id="beanDial"></div>
+          </div>
+          <div id="viewDetails"></div>
         </div>
 
-        <label class="field">
-          <span class="field-label">Name</span>
-          <input type="text" class="text-input" id="beanName" maxlength="60" placeholder="e.g. Ethiopia Guji" enterkeyhint="next">
-        </label>
-        <div class="field-grid">
+        <div class="bean-fields" id="beanFields">
           <label class="field">
-            <span class="field-label">Roaster</span>
-            <input type="text" class="text-input" id="beanRoaster" maxlength="80" enterkeyhint="next">
+            <span class="field-label">Name</span>
+            <input type="text" class="text-input" id="beanName" maxlength="60" placeholder="e.g. Ethiopia Guji" enterkeyhint="next">
           </label>
-          <label class="field">
-            <span class="field-label">Origin</span>
-            <input type="text" class="text-input" id="beanOrigin" maxlength="80" placeholder="Country, region" enterkeyhint="next">
-          </label>
-          <label class="field">
-            <span class="field-label">Variety</span>
-            <input type="text" class="text-input" id="beanVariety" maxlength="80" placeholder="e.g. Heirloom" enterkeyhint="next">
-          </label>
-          <label class="field">
-            <span class="field-label">Process</span>
-            <select class="text-input" id="beanProcess"></select>
-          </label>
+          <div class="field-grid">
+            <label class="field">
+              <span class="field-label">Roaster</span>
+              <input type="text" class="text-input" id="beanRoaster" maxlength="80" enterkeyhint="next">
+            </label>
+            <label class="field">
+              <span class="field-label">Roasted on</span>
+              <input type="date" class="text-input" id="beanRoastedOn">
+            </label>
+          </div>
+          <p class="settings-label">Roast</p>
+          <div class="segmented roasts" id="beanRoast" role="radiogroup" aria-label="Roast"></div>
+          <p class="settings-label">Roasted for</p>
+          <div class="segmented" id="beanRoastFor" role="radiogroup" aria-label="Roasted for"></div>
+          <p class="settings-label">Bag</p>
+          <div class="segmented" id="beanBag" role="radiogroup" aria-label="Bag">
+            <button type="button" role="radio" data-bag="250">250g</button>
+            <button type="button" role="radio" data-bag="500">500g</button>
+            <button type="button" role="radio" data-bag="1000">1kg</button>
+            <button type="button" role="radio" data-bag="other">Other</button>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span class="field-label">Price <small id="beanCurrency"></small></span>
+              <input type="text" class="text-input" id="beanPrice" inputmode="decimal" maxlength="8" enterkeyhint="next">
+            </label>
+            <label class="field" id="beanWeightField" hidden>
+              <span class="field-label">Bag <small>g</small></span>
+              <input type="text" class="text-input" id="beanWeight" inputmode="decimal" maxlength="6" enterkeyhint="next">
+            </label>
+          </div>
+
+          <button type="button" class="fold" id="beanMoreToggle" aria-expanded="false"></button>
+          <div class="bean-more" id="beanMore" hidden>
+            <p class="settings-label">Rating</p>
+            <div class="stars-input" id="beanRating" role="radiogroup" aria-label="Rating"></div>
+            <div class="field-grid">
+              <label class="field">
+                <span class="field-label">Origin</span>
+                <input type="text" class="text-input" id="beanOrigin" maxlength="80" placeholder="Country, region" enterkeyhint="next">
+              </label>
+              <label class="field">
+                <span class="field-label">Variety</span>
+                <input type="text" class="text-input" id="beanVariety" maxlength="80" placeholder="e.g. Heirloom" enterkeyhint="next">
+              </label>
+              <label class="field">
+                <span class="field-label">Process</span>
+                <select class="text-input" id="beanProcess"></select>
+              </label>
+              <label class="field">
+                <span class="field-label">Bought from</span>
+                <input type="text" class="text-input" id="beanShop" maxlength="80" enterkeyhint="next">
+              </label>
+            </div>
+            <label class="field">
+              <span class="field-label">Tasting notes</span>
+              <input type="text" class="text-input" id="beanFlavor" maxlength="80" placeholder="e.g. Blueberry, jasmine, cocoa" enterkeyhint="done">
+            </label>
+            <p class="settings-label">Taste</p>
+            <div class="taste" id="beanTaste"></div>
+            <textarea class="note-input" id="beanNotes" rows="2" maxlength="2000" placeholder="Notes" aria-label="Notes"></textarea>
+          </div>
         </div>
-        <p class="settings-label">Roast</p>
-        <div class="segmented roasts" id="beanRoast" role="radiogroup" aria-label="Roast"></div>
-        <p class="settings-label">Roasted for</p>
-        <div class="segmented" id="beanRoastFor" role="radiogroup" aria-label="Roasted for"></div>
-        <div class="field-grid">
-          <label class="field">
-            <span class="field-label">Roasted on</span>
-            <input type="date" class="text-input" id="beanRoastedOn">
-          </label>
-          <label class="field">
-            <span class="field-label">Bought from</span>
-            <input type="text" class="text-input" id="beanShop" maxlength="80" enterkeyhint="next">
-          </label>
-          <label class="field">
-            <span class="field-label">Price <small id="beanCurrency"></small></span>
-            <input type="text" class="text-input" id="beanPrice" inputmode="decimal" maxlength="8" enterkeyhint="next">
-          </label>
-          <label class="field">
-            <span class="field-label">Bag <small>g</small></span>
-            <input type="text" class="text-input" id="beanWeight" inputmode="decimal" maxlength="6" enterkeyhint="next">
-          </label>
-        </div>
-        <label class="field">
-          <span class="field-label">Tasting notes</span>
-          <input type="text" class="text-input" id="beanFlavor" maxlength="80" placeholder="e.g. Blueberry, jasmine, cocoa" enterkeyhint="done">
-        </label>
-        <textarea class="note-input" id="beanNotes" rows="2" maxlength="2000" placeholder="Notes" aria-label="Notes"></textarea>
+
         <button type="submit" class="pill primary" id="beanSave"></button>
         <div class="extra" id="beanExtra">
-          <!-- a finished bag: add the next one, a copy to check the roast date, price, … -->
           <button type="button" class="pill" id="beanAgain" hidden></button>
           <button type="button" class="pill ghost" id="beanFinished"></button>
           <button type="button" class="pill danger" id="beanDelete"></button>

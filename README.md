@@ -2,11 +2,6 @@
 
 Your coffee beans, and every espresso and pour over you brew with them, as a Home Assistant add-on.
 
-Add the bag you're using: where it's from, the roast, where you bought it and what it cost. Then log each brew: the
-grind setting, the dose, the yield (or water), the time, and whether it was good, sour or bitter. The next one starts
-from the last one, so finding the sweet spot is changing one number. Made for phones, in portrait; on a PC the three lists sit side
-by side.
-
 <p>
   <img src="images/espresso.jpg" alt="Espresso: a recipe card per coffee, its sweet spot as grind, in, out and time" width="200">
   <img src="images/try.jpg" alt="A new try, copied from the last one, with the last good settings to go back to" width="200">
@@ -37,7 +32,7 @@ Log your coffee beans and find the sweet spot for every espresso and pour over.
 - Grind, dose, yield, time and how it tasted
 - Each try starts from your last one
 - The sweet spot of every coffee, at a glance
-- Live on every screen
+- Rate each coffee and score its taste
 
 [Documentation →](./coffee-tracker/README.md)
 

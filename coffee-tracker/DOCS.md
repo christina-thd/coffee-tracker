@@ -28,7 +28,7 @@ On the Espresso and Pour over tabs, each coffee (every bag of it together) has a
 - **Top right**: how it came out: **✓ sweet spot**, or the last try's taste with which way to grind ("sour · grind
   finer", "bitter · grind coarser").
 - **Again**: a new try, copied from the recipe shown.
-- **Tries**: every try, newest first, with its day and time; **Show older** shows more. Tap one to change or delete
+- **Tries** (tap anywhere on the card): every try, newest first; **Show older** shows more. Tap one to change or delete
   it; its ↻ button starts a new try copied from it.
 - A coffee not made that way yet just has **First shot** (or **First brew**).
 
@@ -62,21 +62,38 @@ The next brew of that coffee reminds you. Tap the selected one again to leave it
 When your last brew wasn't good, the **last good** one shows under it (from an earlier bag too). **Use** fills in its
 grind, dose, yield and temperature.
 
-Tap a try (under **See all tries**) to change it (its coffee and kind too) or delete it; **Delete** asks you to tap
+Tap a try (in a card's tries) to change it (its coffee and kind too) or delete it; **Delete** asks you to tap
 it again. **Delete all tries**, at the bottom of a coffee's tries, deletes every try of it made that way (with every
 bag of it); it asks too, as neither can be undone. The coffee itself stays.
 
 Messages at the bottom of the screen say what was done ("Saved", "Deleted"); tap one to dismiss it.
 
+Closing a brew or a bean with changes that aren't saved yet (Close, a tap outside, a swipe down or the back button)
+asks first: **Close** turns into **Discard changes?** for a few seconds. Close again to throw the changes away, or save
+them.
+
 ## Beans
 
-The Beans tab has a card per bag: its roast, what it was roasted for (espresso, pour over or other), its roaster, origin and process, tasting notes, the price and bag size, how
-many days it is off roast, and the grind of its sweet spot for espresso and pour over.
+The Beans tab has a card per bag: its name, its roaster and how many days it is off roast, and on the right your star
+rating with its roast (a dot in the roast's colour) under it. Everything else is in the bean sheet.
 
-Tap a card to open it. At the top is what worked, per kind: the settings that **came out good**, newest first, with
-every bag of this coffee. The same settings logged good again say so ("15× good"), and each says which bag it was. The
-newest 3 show; **See all** shows the rest. **See all tries** opens that kind's tab with this coffee's tries open. It also shows what a cup costs (price ÷ bag size × dose). **Log espresso** and **Log pour over** log a brew
-of it straight away. Below are all its details, to change and **Save**.
+What it was roasted for (espresso, pour over or other) decides where it's offered: a coffee roasted for one is only
+offered for logging that way. The cup and dripper buttons at the top right show just the beans for that method; tap
+again for all.
+
+Tap a card to open it: a page to read, not a form. Under the name are its roaster, roast, what it was roasted for and
+how many days it is off roast, then your stars (tap one to rate it straight away, and a message says so; tap it again
+to clear it) and **Log
+espresso** / **Log pour over**. **Sweet spots and tries** unfolds what worked, per kind: the settings that **came out
+good**, newest first, with every bag of this coffee ("15× good" when logged good again, and which bag), what a cup
+costs (price ÷ bag size × dose), and **See all tries**. Below are its taste, bag, origin and notes, whichever are
+filled in.
+
+**Edit** at the top turns the page into the form; **Save** takes you back to the page. Adding a new coffee asks only
+for the essentials (name, roaster, roast date, roast, what it's roasted for, bag and price); **More details** has the
+rating, origin, variety, process, where you bought it, tasting notes, taste and notes. **Bag** is the size you bought:
+250g, 500g, 1kg, or **Other** to type the grams. Under **Taste**, score its body (light to full), acidity (low to
+bright), sweetness and aftertaste (short to long) from 1 to 5 by tapping a dot; tap it again to clear it.
 
 When the bag is empty, tap **Bag finished**: it moves to the end of the list, isn't offered for new brews, and keeps
 its history. **Back in use** undoes it.
@@ -98,9 +115,27 @@ It reconnects by itself and the badge goes away.
 To have it like an app on your phone, open the direct address `http://<your-homeassistant-ip>:3300/` in the browser
 and choose **Add to Home Screen**. It works in the Home Assistant app too, from the sidebar.
 
+## Install as an app on Android
+
+Chrome on Android only installs an app from a secure (https) address with a trusted certificate. If Home Assistant
+already has one for your own domain (e.g. Let's Encrypt, in its `ssl` folder), the add-on can use it:
+
+1. In the add-on's **Configuration** tab, turn on **ssl**. `certfile` and `keyfile` are the certificate's files in the
+   `ssl` folder (`fullchain.pem` and `privkey.pem` by default). Restart the add-on.
+2. Make your domain point to Home Assistant's address on your home network, e.g. with a DNS rewrite in your router or
+   AdGuard Home (`ha.example.com` → `192.168.1.10`).
+3. On the phone, open `https://<your-domain>:3301/` in Chrome, then ⋮ → **Install app**.
+
+Don't forward port 3301 on your router: there are no passwords, so keep it on your home network. The plain address on
+port 3300 keeps working as before, and a renewed certificate is picked up by itself.
+
 ## Configuration
 
 **currency** (default `€`): the symbol prices and the cost per cup are shown with, e.g. `$` or `£`.
+
+**ssl** (default off), **certfile** (default `fullchain.pem`) and **keyfile** (default `privkey.pem`): also serve the
+app over https on port 3301, with Home Assistant's own certificate from its `ssl` folder (see "Install as an app on
+Android" above).
 
 ## Your data
 

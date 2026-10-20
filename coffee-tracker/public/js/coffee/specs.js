@@ -1,14 +1,12 @@
-// A brew's numbers on one line: grind · dose → yield · ratio · time · temperature, and which bag it was made with.
-// Used by the lists and both sheets.
 import { formatDuration, ratio } from '../shared/coffee.js';
 import { escapeHtml } from '../shared/dom.js';
 import { dayMonth, num, shortDate } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
 
 /**
- * Which bag of a coffee bought more than once: "this bag", "bag roasted 12 Sep", "bag added 3 Aug".
+ * "this bag", "bag roasted 12 Sep" or "bag added 3 Aug".
  * @param {import('../shared/coffee.js').Bean | undefined} bag
- * @param {string | null} [currentId]  the bag you're looking at
+ * @param {string | null} [currentId]
  */
 export function bagLabel(bag, currentId = null) {
   if (!bag) return '';
@@ -17,9 +15,7 @@ export function bagLabel(bag, currentId = null) {
 }
 
 /**
- * Espresso: grind, "18g → 36g" (in → out) and the time; on the sheets (not `short`) the temperature too. Pour over:
- * grind, the ratio ("1:18") and the time. The grams or ratio are soft and the time bold, to tell them apart.
- * `short`: for the coffee cards on the tabs.
+ * A brew's settings on one line; `short` omits the temperature.
  * @param {import('../shared/coffee.js').Brew} brew
  * @param {{ short?: boolean }} [options]
  */

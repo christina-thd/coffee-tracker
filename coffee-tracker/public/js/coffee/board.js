@@ -1,12 +1,9 @@
-// The three tabs. Espresso and Pour over: a recipe card per coffee (every bag of it together): its sweet spot (else its
-// last try) as labelled values, how it came out, and its tries on request. The app is opened to find a coffee's sweet
-// spot and to look the settings up again, not to count cups: so no counts, no diary. Beans: a card per bag.
-// Phones show one tab at a time; wide screens show all three side by side (css/coffee.css).
+// Method tabs: a recipe card per coffee (its sweet spot, else last try). Beans tab: a card per bag.
 import {
-  bagIdsOf, formatDuration, labelOf, latestBrew, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, VERDICTS,
+  bagIdsOf, formatDuration, labelOf, latestBrew, MAX_SCORE, METHODS, ratio, ROASTS, sameCoffee, suits, VERDICTS,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
-import { clock, dayMonth, daysSince, money, num, plural } from '../shared/format.js';
+import { daysSince, num, plural } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
 import { bagLabel, specsHtml } from './specs.js';
 
@@ -15,7 +12,7 @@ import { bagLabel, specsHtml } from './specs.js';
 
 export const TABS = Object.freeze(['espresso', 'pourover', 'beans']);
 
-/** Tries shown when a coffee's tries are opened, and added by each "Show older". */
+/** Tries shown per "Show older" page. */
 export const PAGE = 10;
 
 const EMPTY = {
@@ -24,32 +21,27 @@ const EMPTY = {
   beans: 'No coffee yet. Tap + to add a bag.',
 };
 
-/** When a bean was last brewed (or added): the beans you're using come first. */
 const lastUsed = (bean, brews) => latestBrew(brews, { beanId: bean.id })?.brewedAt ?? bean.createdAt;
 
 const verdictHtml = (verdict) =>
   (verdict ? `<span class="verdict" data-verdict="${verdict}">${labelOf(VERDICTS, verdict)}</span>` : '');
 
-/** One try, in a coffee's opened list: newest first, with its day and time. */
-function tryHtml(brew, bean, several) {
-  const bag = several ? ` · ${bagLabel(bean)}` : '';
+function tryHtml(brew, bean, several, canLog) {
+  const bag = several ? `<p class="brew-bag">${bagLabel(bean)}</p>` : '';
   const comment = brew.comment ? `<p class="brew-comment">${escapeHtml(brew.comment)}</p>` : '';
   return `<li class="brew" data-brew="${brew.id}" data-verdict="${brew.verdict ?? 'none'}">
     <div class="brew-main">
       <p class="specs">${specsHtml(brew, { short: true })}</p>
       ${comment}
-      <p class="brew-when">${dayMonth(brew.brewedAt)}, ${clock(brew.brewedAt)}${bag}</p>
+      ${bag}
     </div>
     <div class="brew-side">${verdictHtml(brew.verdict)}
-      <button type="button" class="again-button" data-again="${brew.id}" aria-label="Try again from this" title="Try again from this">${icon('repeat')}</button>
+      ${canLog ? `<button type="button" class="again-button" data-again="${brew.id}" aria-label="Try again from this" title="Try again from this">${icon('repeat')}</button>` : ''}
     </div>
   </li>`;
 }
 
-/**
- * A brew as a recipe: labelled values in a row. Espresso: grind, in, out, time. Pour over: grind, ratio, time.
- * @param {Brew} brew
- */
+/** @param {Brew} brew */
 function recipeHtml(brew) {
   const grams = (value) => (value == null ? '–' : `${num(value)}g`);
   const cells = brew.method === 'espresso'
@@ -60,7 +52,6 @@ function recipeHtml(brew) {
   </div>`).join('')}</div>`;
 }
 
-/** How the recipe shown came out: "✓ sweet spot", or the try's taste and which way to grind ("sour · grind finer"). */
 function statusHtml(brew) {
   if (brew.verdict === 'good') return `<span class="status" data-verdict="good">${icon('check')}sweet spot</span>`;
   const verdict = VERDICTS.find((v) => v.id === brew.verdict);
@@ -69,61 +60,55 @@ function statusHtml(brew) {
 }
 
 /**
- * A coffee's card on a method's tab, a recipe card: its name and how it's going, the recipe (its sweet spot, else its
- * last try), then its tries (opened in place) and Again (a new try copied from the recipe shown).
  * @param {string} method
- * @param {Bean} bean  its newest bag (the one in use, if any)
+ * @param {Bean} bean  newest bag
  * @param {Bean[]} beans
  * @param {Brew[]} brews  this method's
  * @param {number} opened  tries shown (0: closed)
- * @param {boolean} clearing  "Delete all tries" was tapped once: the next tap deletes
+ * @param {boolean} clearing
  */
 function coffeeHtml(method, bean, beans, brews, opened, clearing) {
   const bags = bagIdsOf(beans, bean);
   const several = bags.size > 1;
   const tries = brews.filter((b) => bags.has(b.beanId)).sort((a, b) => b.brewedAt - a.brewedAt);
-  const shown = tries.find((b) => b.verdict === 'good') ?? tries[0];   // what works, else where you are
+  const shown = tries.find((b) => b.verdict === 'good') ?? tries[0];
+  // roasted for the other method: its tries stay visible, but nothing new is logged here
+  const canLog = !bean.finished && suits(bean, method);
 
   if (!shown) {
-    // not made this way yet: just its name, and the first one
     return `<li class="coffee coffee-new${bean.finished ? ' finished' : ''}" data-coffee="${bean.id}">
       <p class="bean-name">${escapeHtml(bean.name)}</p>
-      ${bean.finished ? '' : `<button type="button" class="card-action" data-log-coffee="${bean.id}">${icon('plus')}First ${method === 'espresso' ? 'shot' : 'brew'}</button>`}
+      ${canLog ? `<button type="button" class="card-action" data-log-coffee="${bean.id}">${icon('plus')}First ${method === 'espresso' ? 'shot' : 'brew'}</button>` : ''}
     </li>`;
   }
 
-  // a coffee bought more than once: which bag the recipe is from
   const from = several ? `<p class="coffee-bag">${bagLabel(beans.find((b) => b.id === shown.beanId), bean.id)}</p>` : '';
   const clear = `<li class="clear-tries"><button type="button" class="pill danger${clearing ? ' armed' : ''}" data-clear="${bean.id}">${
     icon('trash')}<span>${clearing ? 'Tap again: delete all tries' : 'Delete all tries'}</span></button></li>`;
   const list = opened
-    ? `<ul class="tries">${tries.slice(0, opened).map((b) => tryHtml(b, beans.find((x) => x.id === b.beanId), several)).join('')}${
+    ? `<ul class="tries">${tries.slice(0, opened).map((b) => tryHtml(b, beans.find((x) => x.id === b.beanId), several, canLog)).join('')}${
       tries.length > opened ? `<li class="more"><button type="button" class="link" data-older="${bean.id}">Show older</button></li>` : ''}${clear}</ul>`
     : '';
 
-  return `<li class="coffee${bean.finished ? ' finished' : ''}" data-coffee="${bean.id}">
+  return `<li class="coffee coffee-opens${bean.finished ? ' finished' : ''}${opened ? ' open' : ''}" data-coffee="${bean.id}" data-card-tries="${bean.id}">
     <div class="coffee-head"><p class="bean-name">${escapeHtml(bean.name)}</p>${statusHtml(shown)}</div>
     ${from}
     ${recipeHtml(shown)}
     <div class="coffee-foot">
       <button type="button" class="card-link" data-tries="${bean.id}" aria-expanded="${opened > 0}">${opened ? 'Hide tries' : 'Tries'}${icon('chevron')}</button>
-      ${bean.finished ? '' : `<button type="button" class="card-action" data-again="${shown.id}">${icon('repeat')}Again</button>`}
+      ${canLog ? `<button type="button" class="card-action" data-again="${shown.id}">${icon('repeat')}Again</button>` : ''}
     </div>
     ${list}
   </li>`;
 }
 
-/** The bag a coffee's card stands for (its id is the card's): the newest in use, else the newest. */
+/** The bag a coffee's card stands for: the newest in use, else the newest. */
 export function cardBagOf(beans, bean) {
   return [...beans].filter((b) => sameCoffee(b, bean))
     .sort((a, b) => Number(a.finished) - Number(b.finished) || b.createdAt - a.createdAt)[0] ?? bean;
 }
 
-/**
- * The coffees on a method's tab: one per coffee (its newest bag, the one in use if any). In use first, the most
- * recently brewed this way first, then ones not made this way yet; then finished ones made this way, to look their
- * settings up.
- */
+/** One per coffee: in use (most recently brewed first), then finished ones made this way. */
 function coffeesOf(method, beans, brews) {
   const made = new Set(brews.filter((b) => b.method === method).map((b) => b.beanId));
   const newestFirst = [...beans].sort((a, b) => Number(a.finished) - Number(b.finished) || b.createdAt - a.createdAt);
@@ -131,7 +116,7 @@ function coffeesOf(method, beans, brews) {
   for (const bean of newestFirst) {
     if (coffees.some((c) => sameCoffee(c, bean))) continue;
     const bags = bagIdsOf(beans, bean);
-    if (bean.finished && ![...bags].some((id) => made.has(id))) continue;   // finished, never made this way
+    if ((bean.finished || !suits(bean, method)) && ![...bags].some((id) => made.has(id))) continue;
     coffees.push(bean);
   }
   const used = (bean) => latestBrew(brews.filter((b) => b.method === method && bagIdsOf(beans, bean).has(b.beanId)), {})?.brewedAt ?? 0;
@@ -148,80 +133,87 @@ function brewColumnHtml(method, beans, brews, opened, clearing) {
   return inUse.map(card).join('') + (finished.length ? `<li class="list-heading">Finished</li>${finished.map(card).join('')}` : '');
 }
 
-/** What a bean's card says under its name: price, bag, days off roast. */
-function beanMeta(bean, currency, now) {
-  const meta = [];
-  if (bean.price != null) meta.push(money(bean.price, currency) + (bean.weight ? ` / ${num(bean.weight)}g` : ''));
-  else if (bean.weight) meta.push(`${num(bean.weight)}g`);
-  if (bean.roastedOn && !bean.finished) meta.push(`${plural(daysSince(bean.roastedOn, now), 'day')} off roast`);
-  return meta.join(' · ');
-}
-
-function beanHtml(bean, beans, brews, currency, now) {
-  const sub = [bean.roaster, bean.origin, labelOf(PROCESSES, bean.process)].filter(Boolean).join(' · ');
-  const roast = bean.roast ? `<span class="roast" data-roast="${bean.roast}">${labelOf(ROASTS, bean.roast)}</span>` : '';
-  const roastFor = ROAST_FOR.find((r) => r.id === bean.roastFor);
-  const forHtml = roastFor ? `<span class="roast-for">${roastFor.card}</span>` : '';
-  // the grind it's dialed in at per method, with any bag of this coffee: where to start next time
-  const bags = bagIdsOf(beans, bean);
-  const ofBags = brews.filter((b) => bags.has(b.beanId));
-  const dial = METHODS.map((m) => {
-    const good = latestBrew(ofBags, { method: m.id, verdict: 'good' });
-    return good?.grind ? `<span class="dial-chip" title="Sweet spot: ${m.label.toLowerCase()}">${icon(m.id)}${escapeHtml(good.grind)}</span>` : '';
-  }).join('');
-  const meta = beanMeta(bean, currency, now);
+/** Two lines: the name and its stars, then roaster · roast · days off roast. The rest is in the bean sheet. */
+function beanHtml(bean, now) {
+  const sub = [
+    bean.roaster,
+    bean.roastedOn && !bean.finished ? `${plural(daysSince(bean.roastedOn, now), 'day')} off roast` : '',
+  ].filter(Boolean).join(' · ');
+  const stars = bean.rating
+    ? `<span class="stars" aria-label="${bean.rating} of ${MAX_SCORE} stars">${Array.from({ length: MAX_SCORE }, (_, i) =>
+      `<span class="${i < bean.rating ? 'on' : ''}">${icon('star')}</span>`).join('')}</span>`
+    : '';
+  const roast = bean.roast ? `<span class="bean-roast"><span class="roast-dot" data-roast="${bean.roast}"></span>${labelOf(ROASTS, bean.roast)}</span>` : '';
+  // on the right: the stars, the roast under them (centred alone)
+  const side = stars || roast ? `<div class="bean-side">${stars}${roast}</div>` : '';
   return `<li class="bean${bean.finished ? ' finished' : ''}" data-bean-open="${bean.id}">
-    <div class="bean-head"><p class="bean-name">${escapeHtml(bean.name)}</p>${forHtml}${roast}</div>
-    ${sub ? `<p class="bean-sub">${escapeHtml(sub)}</p>` : ''}
-    ${bean.flavor ? `<p class="bean-flavor">${escapeHtml(bean.flavor)}</p>` : ''}
-    ${meta || dial ? `<div class="bean-foot"><p class="bean-meta">${meta}</p>${dial}</div>` : ''}
+    <div class="bean-main">
+      <p class="bean-name">${escapeHtml(bean.name)}</p>
+      ${sub ? `<p class="bean-sub">${escapeHtml(sub)}</p>` : ''}
+    </div>
+    ${side}
   </li>`;
 }
 
-function beansHtml(beans, brews, currency, now) {
-  const byUse = [...beans].sort((a, b) => lastUsed(b, brews) - lastUsed(a, brews));
-  const card = (b) => beanHtml(b, beans, brews, currency, now);
+/** `filter`: 'all', or a method: the beans that suit it. */
+function beansHtml(beans, brews, now, filter) {
+  const byUse = [...beans].filter((b) => filter === 'all' || suits(b, filter))
+    .sort((a, b) => lastUsed(b, brews) - lastUsed(a, brews));
+  const card = (b) => beanHtml(b, now);
   const finished = byUse.filter((b) => b.finished);
   return byUse.filter((b) => !b.finished).map(card).join('')
     + (finished.length ? `<li class="list-heading">Finished</li>${finished.map(card).join('')}` : '');
 }
 
 /**
- * Fills the three columns and the tabs.
- * @param {{ beans: Bean[], brews: Brew[], currency: string, tab: string, opened: Record<string, number>,
- *   clearing?: string | null }} options
- *   opened: per "method:beanId", how many of that coffee's tries are shown (none: closed)
- *   clearing: the "method:beanId" whose "Delete all tries" was tapped once (null: none)
+ * @param {{ beans: Bean[], brews: Brew[], tab: string, opened: Record<string, number>,
+ *   clearing?: string | null, beanFilter?: string }} options  keys are "method:beanId"
  */
-export function renderBoard({ beans, brews, currency, tab, opened, clearing = null }) {
+export function renderBoard({ beans, brews, tab, opened, clearing = null, beanFilter = 'all' }) {
   const now = Date.now();
   for (const name of TABS) {
     const column = /** @type {HTMLElement} */ ($('board').querySelector(`.column[data-tab="${name}"]`));
     const list = column.querySelector('.list');
     const empty = /** @type {HTMLElement} */ (column.querySelector('.empty'));
-    list.innerHTML = name === 'beans' ? beansHtml(beans, brews, currency, now) : brewColumnHtml(name, beans, brews, opened, clearing);
+    list.innerHTML = name === 'beans'
+      ? beansHtml(beans, brews, now, beanFilter)
+      : brewColumnHtml(name, beans, brews, opened, clearing);
     empty.hidden = list.children.length > 0;
-    empty.textContent = EMPTY[name];
+    empty.textContent = name === 'beans' && beans.length
+      ? `No beans for ${METHODS.find((m) => m.id === beanFilter)?.label.toLowerCase()}.`
+      : EMPTY[name];
     column.classList.toggle('current', name === tab);
     const tabButton = $('tabs').querySelector(`[data-tab="${name}"]`);
     tabButton.classList.toggle('selected', name === tab);
     tabButton.setAttribute('aria-selected', String(name === tab));
   }
   $('board').dataset.tab = tab;
+  $('beanFilter').hidden = beans.length < 2;
+  $('beanFilter').classList.toggle('on-beans', tab === 'beans');
+  for (const button of $('beanFilter').querySelectorAll('[data-bean-filter]')) {
+    if (!(button instanceof HTMLElement)) continue;
+    if (!button.firstChild) button.innerHTML = icon(button.dataset.beanFilter);
+    const selected = button.dataset.beanFilter === beanFilter;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
 }
 
 /**
- * One listener for the tabs and one for the whole board. Coffee cards are on a method's column: `method` is its tab.
  * @param {{ onTab(tab: string): void, onLog(method: string, beanId: string): void, onAgain(brewId: string): void,
  *   onTries(method: string, beanId: string): void, onOlder(method: string, beanId: string): void,
- *   onClear(method: string, beanId: string): void,
+ *   onClear(method: string, beanId: string): void, onBeanFilter(filter: string): void,
  *   onOpenBrew(id: string): void, onOpenBean(id: string): void }} handlers
- *   onLog: a new try of a coffee (from its last); onAgain: a new try copied from that one
  */
 export function wireBoard(handlers) {
   $('tabs').addEventListener('click', (e) => {
     const tab = closest(e, '[data-tab]');
     if (tab) handlers.onTab(tab.dataset.tab);
+  });
+  $('beanFilter').addEventListener('click', (e) => {
+    const button = closest(e, '[data-bean-filter]');
+    // tapping the one that's on turns it off: all beans
+    if (button) handlers.onBeanFilter(button.classList.contains('selected') ? 'all' : button.dataset.beanFilter);
   });
   $('board').addEventListener('click', (e) => {
     const method = closest(e, '.column')?.dataset.tab;
@@ -237,6 +229,9 @@ export function wireBoard(handlers) {
     if (clear) return handlers.onClear(method, clear.dataset.clear);
     const brew = closest(e, '[data-brew]');
     if (brew) return handlers.onOpenBrew(brew.dataset.brew);
+    // anywhere else on a coffee's card (not in its open list) opens or closes its tries
+    const card = closest(e, '[data-card-tries]');
+    if (card && !closest(e, '.tries')) return handlers.onTries(method, card.dataset.cardTries);
     const bean = closest(e, '[data-bean-open]');
     if (bean) handlers.onOpenBean(bean.dataset.beanOpen);
   });

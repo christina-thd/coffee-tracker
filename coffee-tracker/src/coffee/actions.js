@@ -1,10 +1,9 @@
 import {
   idsOf, isDate, LIMITS, MAX_BEANS, MAX_BREWS, MAX_GRIND, MAX_NAME, MAX_NOTE, MAX_TEXT, METHODS, PROCESSES, ROAST_FOR,
-  ROASTS, VERDICTS,
+  ROASTS, TASTE, isScore, MAX_SCORE, VERDICTS,
 } from '../../public/js/shared/coffee.js';
 import { BEAN_TEXT_FIELDS, cleanText, emptyBean, emptyBrew, findBean, findBrew } from './state.js';
 
-/** A rejected action. `status` is the HTTP status the API answers with. */
 export class ActionError extends Error {
   constructor(message, status = 400) {
     super(message);
@@ -12,8 +11,6 @@ export class ActionError extends Error {
     this.status = status;
   }
 }
-
-// ----- input helpers -----
 
 function getBean(state, beanId) {
   const bean = findBean(state, beanId);
@@ -32,7 +29,6 @@ function text(value, max, name, multiline = false) {
   return cleanText(value, max, { multiline });
 }
 
-/** An optional number (null or '' clears it) from 0 to its limit (LIMITS). */
 function number(value, name) {
   if (value == null || value === '') return null;
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > LIMITS[name]) {
@@ -41,7 +37,6 @@ function number(value, name) {
   return Math.round(value * 100) / 100;
 }
 
-/** An optional choice from one of the lists in shared/coffee.js (null or '' clears it). */
 function choice(value, list, name) {
   if (value == null || value === '') return null;
   const allowed = idsOf(list);
@@ -49,10 +44,7 @@ function choice(value, list, name) {
   return value;
 }
 
-/**
- * What each field of a bean or brew accepts: a check that returns the clean value or throws.
- * @type {Record<string, (value: any, state?: any) => any>}
- */
+/** @type {Record<string, (value: any, state?: any) => any>} */
 const BEAN_FIELDS = {
   name: (value) => {
     const name = text(value, MAX_NAME, 'name');
@@ -63,6 +55,11 @@ const BEAN_FIELDS = {
   process: (value) => choice(value, PROCESSES, 'process'),
   roast: (value) => choice(value, ROASTS, 'roast'),
   roastFor: (value) => choice(value, ROAST_FOR, 'roastFor'),
+  ...Object.fromEntries([...TASTE.map((t) => t.id), 'rating'].map((field) => [field, (value) => {
+    if (value == null || value === '') return null;
+    if (!isScore(value)) throw new ActionError(`${field} must be a whole number from 1 to ${MAX_SCORE}`);
+    return value;
+  }])),
   roastedOn: (value) => {
     if (value == null || value === '') return null;
     if (!isDate(value)) throw new ActionError('roastedOn must be a date (YYYY-MM-DD)');
@@ -92,10 +89,7 @@ const BREW_FIELDS = {
   comment: (value) => text(value, MAX_NOTE, 'comment', true),
 };
 
-/**
- * Sets the fields given in `input` (the others stay as they are). Every field is checked before any is set, so a
- * rejected action changes nothing.
- */
+/** Validates every field before setting any, so a rejected action changes nothing. */
 function setFields(target, input, fields, state) {
   const changes = {};
   for (const [field, check] of Object.entries(fields)) {
@@ -104,11 +98,8 @@ function setFields(target, input, fields, state) {
   return Object.assign(target, changes);
 }
 
-// ----- actions -----
-// Each handler changes `state` in place and may return a result for the caller. `now` is the time of the action.
-
+// Handlers mutate `state` in place.
 const handlers = {
-  /** Adds a bean: a name, and any of the other fields (see Bean in shared/coffee.js). */
   addBean(state, input, now) {
     if (state.beans.length >= MAX_BEANS) throw new ActionError(`At most ${MAX_BEANS} beans: delete some finished ones first`);
     if (input.name === undefined) throw new ActionError('name is required');
@@ -117,12 +108,10 @@ const handlers = {
     return { beanId: bean.id };
   },
 
-  /** Changes the fields given; e.g. { finished: true } when the bag is empty. */
   editBean(state, { beanId, ...input }) {
     setFields(getBean(state, beanId), input, BEAN_FIELDS);
   },
 
-  /** Removes a bean and every brew made with it. */
   removeBean(state, { beanId }) {
     getBean(state, beanId);
     const before = state.brews.length;
@@ -131,10 +120,7 @@ const handlers = {
     return { removedBrews: before - state.brews.length };
   },
 
-  /**
-   * Logs a brew of a bean: the method, and any of the other fields (see Brew in shared/coffee.js).
-   * `brewedAt` is now, unless one is given (an undone delete puts a brew back as it was).
-   */
+  /** `brewedAt` may be given so an undone delete restores the brew as it was. */
   addBrew(state, input, now) {
     if (state.brews.length >= MAX_BREWS) throw new ActionError(`At most ${MAX_BREWS} brews`);
     if (input.beanId === undefined) throw new ActionError('beanId is required');
@@ -149,7 +135,6 @@ const handlers = {
     return { brewId: brew.id };
   },
 
-  /** Changes the fields given (the bean and method too: a brew logged on the wrong one). */
   editBrew(state, { brewId, ...input }) {
     setFields(getBrew(state, brewId), input, BREW_FIELDS, state);
   },
@@ -159,7 +144,7 @@ const handlers = {
     state.brews = state.brews.filter((b) => b.id !== brewId);
   },
 
-  /** Removes every brew of `method` made with any of `beanIds` (a coffee's bags); the beans stay. */
+  /** Removes brews of `method` for the given beans; the beans stay. */
   clearBrews(state, { beanIds, method }) {
     if (!Array.isArray(beanIds) || !beanIds.length || beanIds.length > MAX_BEANS) {
       throw new ActionError('beanIds must be a list of beans');
@@ -176,10 +161,6 @@ const handlers = {
 
 export const ACTION_TYPES = Object.freeze(Object.keys(handlers));
 
-/**
- * Applies one action to the state (mutating it) and returns the handler's result.
- * Throws ActionError for anything invalid; the state is left unchanged in that case.
- */
 export function applyAction(state, action, now = Date.now()) {
   if (!action || typeof action !== 'object') throw new ActionError('Action must be a JSON object');
   if (!Object.hasOwn(handlers, action.type)) throw new ActionError(`Unknown action: ${action.type}`);
