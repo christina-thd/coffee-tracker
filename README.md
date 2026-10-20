@@ -5,10 +5,7 @@ Your coffee beans, and every espresso and pour over you brew with them, as a Hom
 <p>
   <img src="images/espresso.jpg" alt="Espresso: a recipe card per coffee, its sweet spot as grind, in, out and time" width="200">
   <img src="images/try.jpg" alt="A new try, copied from the last one, with the last good settings to go back to" width="200">
-  <img src="images/beans.jpg" alt="Beans: roaster, origin, roast, price and days off roast" width="200">
-</p>
-<p>
-  <img src="images/desktop.jpg" alt="On a PC: Espresso, Pour over and Beans side by side" width="820">
+  <img src="images/beans.jpg" alt="Beans: roaster, days off roast, rating and roast" width="200">
 </p>
 
 ## Installation

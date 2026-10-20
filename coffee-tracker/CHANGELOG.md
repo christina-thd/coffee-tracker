@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.1
+- No bag date on tries
+
 ## 2.0.0
 - Use Home Assistant's certificate
 - New look for recipe cards, beans and each coffee's page

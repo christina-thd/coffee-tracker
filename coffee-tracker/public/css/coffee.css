@@ -130,6 +130,7 @@ body.offline .offline-badge { display: inline-flex; }
 
 .tries { margin: 4px 0 0; padding: 0; list-style: none; }
 .tries .brew {
+  align-items: center;
   padding: 10px 0;
   border: 0;
   border-top: 1px solid var(--line);
@@ -138,7 +139,6 @@ body.offline .offline-badge { display: inline-flex; }
 }
 .tries .brew:active { background: transparent; }
 .tries .brew-side { flex-direction: row; align-items: center; gap: 8px; }
-.brew-bag { margin: 4px 0 0; color: var(--faint); font-size: 11.5px; }
 .again-button {
   display: grid;
   place-items: center;
