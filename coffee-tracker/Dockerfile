@@ -18,8 +18,9 @@ COPY public ./public
 COPY run.sh /
 RUN chmod a+x /run.sh
 
-# Web interface (Home Assistant ingress, and the optional direct port)
+# Web interface (Home Assistant ingress, and the optional direct port), and https with the ssl option
 EXPOSE 3300/tcp
+EXPOSE 3301/tcp
 
 # Runs as root: the beans and brews are saved in /data, which Home Assistant mounts owned by root.
 CMD [ "/run.sh" ]

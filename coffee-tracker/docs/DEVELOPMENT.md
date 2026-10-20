@@ -18,9 +18,10 @@ npm run check       # all three, as the pull request checks do
 | `HOST`       | `0.0.0.0`          | Interface to bind                       |
 | `STATE_FILE` | `data/coffee.json` | Where beans and brews are saved         |
 | `CURRENCY`   | `€`                | The symbol prices are shown with        |
+| `HTTPS_PORT`, `TLS_CERT`, `TLS_KEY` | off | Also serve https (PEM certificate and key, reloaded when renewed); the add-on uses 3301 with Home Assistant's certificate (`ssl` option) |
 
 The server doesn't know about Home Assistant: in the add-on, `run.sh` sets these variables (`CURRENCY` from the
-add-on's `currency` option).
+add-on's `currency` option; the https ones with the `ssl` option, from `certfile` and `keyfile` in `/ssl`).
 
 To try it on your phone while developing, open `http://<your-pc-ip>:3300/` on the same Wi-Fi.
 
@@ -34,8 +35,9 @@ config.yaml, Dockerfile, run.sh     Home Assistant add-on
 README.md, DOCS.md, CHANGELOG.md    add-on store page, Documentation tab, changelog
 
 src/                      server (Node, no framework, no dependencies)
-  server.js               entry point: load config and state, start HTTP, graceful shutdown
+  server.js               entry point: load config and state, start HTTP (and https), graceful shutdown
   config.js               environment variables
+  tls.js                  https certificate: reading it, and reloading it when it's renewed
   app.js                  HTTP routes: page, static files, API
   coffee/state.js         state shape, repairing saved data, the view sent to screens
   coffee/actions.js       every action, validated (the only code that changes state)

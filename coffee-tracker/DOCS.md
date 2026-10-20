@@ -98,9 +98,27 @@ It reconnects by itself and the badge goes away.
 To have it like an app on your phone, open the direct address `http://<your-homeassistant-ip>:3300/` in the browser
 and choose **Add to Home Screen**. It works in the Home Assistant app too, from the sidebar.
 
+## Install as an app on Android
+
+Chrome on Android only installs an app from a secure (https) address with a trusted certificate. If Home Assistant
+already has one for your own domain (e.g. Let's Encrypt, in its `ssl` folder), the add-on can use it:
+
+1. In the add-on's **Configuration** tab, turn on **ssl**. `certfile` and `keyfile` are the certificate's files in the
+   `ssl` folder (`fullchain.pem` and `privkey.pem` by default). Restart the add-on.
+2. Make your domain point to Home Assistant's address on your home network, e.g. with a DNS rewrite in your router or
+   AdGuard Home (`ha.example.com` → `192.168.1.10`).
+3. On the phone, open `https://<your-domain>:3301/` in Chrome, then ⋮ → **Install app**.
+
+Don't forward port 3301 on your router: there are no passwords, so keep it on your home network. The plain address on
+port 3300 keeps working as before, and a renewed certificate is picked up by itself.
+
 ## Configuration
 
 **currency** (default `€`): the symbol prices and the cost per cup are shown with, e.g. `$` or `£`.
+
+**ssl** (default off), **certfile** (default `fullchain.pem`) and **keyfile** (default `privkey.pem`): also serve the
+app over https on port 3301, with Home Assistant's own certificate from its `ssl` folder (see "Install as an app on
+Android" above).
 
 ## Your data
 

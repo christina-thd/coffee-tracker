@@ -21,9 +21,12 @@ few taps, and just as usable from a PC.
 
 ## Configuration
 
-| Option     | Default | What it does                    |
-|------------|---------|---------------------------------|
-| `currency` | `€`     | The symbol prices are shown with |
+| Option     | Default         | What it does                                                         |
+|------------|-----------------|----------------------------------------------------------------------|
+| `currency` | `€`             | The symbol prices are shown with                                     |
+| `ssl`      | off             | Also serve https on port 3301 with Home Assistant's certificate (see the Documentation tab) |
+| `certfile` | `fullchain.pem` | The certificate, in Home Assistant's `ssl` folder                    |
+| `keyfile`  | `privkey.pem`   | Its key, in the same folder                                          |
 
 ## Usage
 

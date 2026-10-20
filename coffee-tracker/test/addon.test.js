@@ -28,10 +28,22 @@ test('run.sh starts the app on the ingress port', () => {
   assert.match(run, /exec node \/app\/src\/server\.js/);
 });
 
-test('the direct port and the Dockerfile use the same port as the app', () => {
+test('the direct ports and the Dockerfile use the same ports as the app', () => {
   const port = yamlValue(config, 'ingress_port');
-  assert.deepEqual(keys(block(config, 'ports').replace(/^ {2}(\d+)\/tcp:/gm, '  p$1:')), [`p${port}`]);
-  assert.match(read('Dockerfile'), new RegExp(`^EXPOSE ${port}/tcp$`, 'm'));
+  const httpsPort = read('run.sh').match(/^ +export HTTPS_PORT=(\d+)/m)?.[1];
+  const portKeys = (text) => keys(text.replace(/^ {2}(\d+)\/tcp:/gm, '  p$1:'));
+  assert.deepEqual(portKeys(block(config, 'ports')), [`p${port}`, `p${httpsPort}`].sort());
+  assert.deepEqual(portKeys(block(config, 'ports_description')), [`p${port}`, `p${httpsPort}`].sort());
+  for (const p of [port, httpsPort]) assert.match(read('Dockerfile'), new RegExp(`^EXPOSE ${p}/tcp$`, 'm'));
+});
+
+test("the ssl option uses Home Assistant's certificate", () => {
+  assert.match(config, /^ {2}- ssl:ro$/m);                                      // the ssl folder, read-only
+  assert.match(config, /^ {2}ssl: false$/m);                                    // off unless turned on
+  const run = read('run.sh');
+  assert.match(run, /bashio::config\.true 'ssl'/);
+  assert.match(run, /CERTFILE="\/ssl\/\$\{CERTFILE##\*\/\}"/);                  // just the name, in /ssl
+  assert.match(run, /KEYFILE="\/ssl\/\$\{KEYFILE##\*\/\}"/);
 });
 
 test('beans and brews are kept in the add-on data folder', () => {
@@ -68,8 +80,13 @@ test('store images are PNGs of the sizes Home Assistant expects', () => {
   assert.deepEqual(pngSize('logo.png'), [250, 100]);
 });
 
+test('every option has a schema entry, and run.sh reads each one', () => {
+  assert.deepEqual(keys(block(config, 'options')), keys(block(config, 'schema')));
+  const run = read('run.sh');
+  for (const option of keys(block(config, 'options'))) assert.match(run, new RegExp(`bashio::config(\\.true)? '${option}'`), option);
+});
+
 test('the currency option reaches the app', () => {
-  assert.match(block(config, 'options'), /^ {2}currency:/m);
   assert.match(block(config, 'schema'), /^ {2}currency: "str\?"$/m);
   assert.match(read('run.sh'), /export CURRENCY="\$\(bashio::config 'currency'\)"/);
 });
