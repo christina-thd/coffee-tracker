@@ -10,6 +10,7 @@ few taps, and just as usable from a PC.
 - Grind, dose, yield, time and how it tasted
 - Each try starts from your last one
 - The sweet spot of every coffee, at a glance
+- Rate each coffee and score its taste
 
 ## Installation
 

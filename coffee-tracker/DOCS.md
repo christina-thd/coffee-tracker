@@ -62,7 +62,7 @@ The next brew of that coffee reminds you. Tap the selected one again to leave it
 When your last brew wasn't good, the **last good** one shows under it (from an earlier bag too). **Use** fills in its
 grind, dose, yield and temperature.
 
-Tap a try (under **See all tries**) to change it (its coffee and kind too) or delete it; **Delete** asks you to tap
+Tap a try (in a card's tries) to change it (its coffee and kind too) or delete it; **Delete** asks you to tap
 it again. **Delete all tries**, at the bottom of a coffee's tries, deletes every try of it made that way (with every
 bag of it); it asks too, as neither can be undone. The coffee itself stays.
 

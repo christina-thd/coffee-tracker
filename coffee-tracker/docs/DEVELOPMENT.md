@@ -53,9 +53,9 @@ public/                   browser (plain ES modules, no build step)
                           api, dom, format, storage
   js/ui/                  reusable pieces: back (phone back button), sheet (bottom sheets, swipe to close),
                           viewport (keeps sheets above the keyboard), toast (says what was done; no buttons), icons
-  js/coffee/              hero (the logo and a greeting above the tabs),
-                          board (the three tabs: a card per coffee per method, the bags), brew-sheet (log / change a brew),
-                          bean-sheet (add / change / finish a coffee), specs (a brew's numbers on one line)
+  js/coffee/              hero (the greeting above the tabs),
+                          board (the three tabs: a recipe card per coffee per method, the bags), brew-sheet (log / change a brew),
+                          bean-sheet (a coffee's page, and the form to add / change it), specs (a brew's numbers on one line)
 
 test/                     node:test suites
 ```
@@ -98,7 +98,10 @@ shows; above, all three sit side by side and the tabs hide (`css/coffee.css`).
 settings, not a diary: the "sweet spot" is a coffee's last brew that came out good (per method, with any bag of it), and
 there are no counts of cups or brews.
 
-**Remembered per device** (localStorage, `js/shared/storage.js`): the tab.
+**Remembered per device** (localStorage, `js/shared/storage.js`): the tab and the Beans filter.
+
+**Unsaved changes:** a sheet's `isDirty` compares the form with how it was when it opened; closing a changed one
+turns Close into "Discard changes?" first (`js/ui/sheet.js`). Saving and deleting close without asking.
 
 **Back button:** opening a sheet adds a history entry, so the phone's back button (and the Home Assistant app's)
 closes it instead of leaving the page (`js/ui/back.js`). The brew sheet can open on top of the bean sheet.

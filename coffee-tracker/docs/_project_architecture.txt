@@ -31,7 +31,7 @@ coffee-tracker/                    Home Assistant add-on containing the app
 │       ├── shared/  coffee.js (methods, roasts, verdicts, limits, helpers; used by the server too), api, dom, format,
 │       │            storage
 │       ├── ui/      back, sheet, viewport, toast, icons
-│       └── coffee/  hero (greeting), board (tabs: coffee cards, bags), brew-sheet, bean-sheet, specs
+│       └── coffee/  hero (greeting), board (tabs: recipe cards, bags), brew-sheet, bean-sheet, specs
 ├── test/                          automated tests (Node's built-in runner, no extra deps):
 │                                  actions, state, coffee (shared helpers), store, http, tls, addon packaging;
 │                                  fixtures/ (a test-only certificate)

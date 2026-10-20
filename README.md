@@ -32,6 +32,7 @@ Log your coffee beans and find the sweet spot for every espresso and pour over.
 - Grind, dose, yield, time and how it tasted
 - Each try starts from your last one
 - The sweet spot of every coffee, at a glance
+- Rate each coffee and score its taste
 
 [Documentation →](./coffee-tracker/README.md)
 
