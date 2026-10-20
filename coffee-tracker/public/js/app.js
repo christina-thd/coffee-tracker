@@ -19,6 +19,7 @@ let brews = [];
 let currency = '€';
 let loaded = false;
 let tab = TABS.includes(storage.get('coffee.tab')) ? storage.get('coffee.tab') : 'espresso';
+let beanFilter = ['espresso', 'pourover'].includes(storage.get('coffee.beanFilter')) ? storage.get('coffee.beanFilter') : 'all';
 let opened = {};                                 // "method:beanId" -> how many tries show
 
 const brewSheet = createBrewSheet({
@@ -94,7 +95,7 @@ function render() {
   $('welcome').hidden = any;
   for (const id of ['hero', 'tabs', 'board', 'addButton']) $(id).hidden = !any;
   renderHero();
-  renderBoard({ beans, brews, currency, tab, opened, clearing });
+  renderBoard({ beans, brews, currency, tab, opened, clearing, beanFilter });
   const label = tab === 'beans' ? 'Add a coffee' : `Log ${methodOf(tab).label.toLowerCase()}`;
   $('addButton').setAttribute('aria-label', label);
   $('addButton').title = label;
@@ -103,7 +104,7 @@ function render() {
 /** With no coffee to brew yet, adding one comes first. */
 function openBrew(method, beanId = null) {
   if (brewSheet.open({ method, beanId })) return;
-  toast('Add a coffee first');
+  toast(beans.some((b) => !b.finished) ? `No coffee for ${methodOf(method).label.toLowerCase()} yet` : 'Add a coffee first');
   beanSheet.open();
 }
 
@@ -129,6 +130,11 @@ wireBoard({
   onTries: toggleTries,
   onOlder: showOlder,
   onClear: clearTries,
+  onBeanFilter: (filter) => {
+    beanFilter = filter;
+    storage.set('coffee.beanFilter', filter);
+    render();
+  },
   onOpenBrew: (id) => brewSheet.edit(id),
   onOpenBean: (id) => beanSheet.open(id),
 });

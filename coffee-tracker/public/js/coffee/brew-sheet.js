@@ -1,6 +1,8 @@
 // New brews start from the last one of that coffee and method, so finding the sweet spot is changing one number.
 import { sendAction } from '../shared/api.js';
-import { bagIdsOf, labelOf, latestBrew, methodOf, parseNumber, ratio, sameCoffee, VERDICTS } from '../shared/coffee.js';
+import {
+  bagIdsOf, labelOf, latestBrew, methodOf, parseNumber, ratio, sameCoffee, suits, VERDICTS,
+} from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
 import { agoText, dateTime, num } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
@@ -48,10 +50,13 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
 
   const getBrew = () => getBrews().find((b) => b.id === brewId);
 
-  /** Beans in use, plus the selected one (it may be finished). */
+  /** Beans in use that suit the method, plus the selected one (finished, or an existing brew's). */
   function renderBeans(selected) {
-    const options = getBeans().filter((b) => !b.finished || b.id === selected);
-    bean.innerHTML = options.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}${b.roaster ? ` · ${escapeHtml(b.roaster)}` : ''}</option>`).join('');
+    const offered = (b) => (b.id === selected && (brewId || suits(b, method))) || (!b.finished && suits(b, method));
+    const options = getBeans().filter(offered);
+    bean.innerHTML = options.length
+      ? options.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}${b.roaster ? ` · ${escapeHtml(b.roaster)}` : ''}</option>`).join('')
+      : `<option value="">No coffee for ${methodOf(method).label.toLowerCase()} yet</option>`;
     if (options.some((b) => b.id === selected)) bean.value = selected;
   }
 
@@ -184,10 +189,11 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     const given = getBeans().find((b) => b.id === wanted);
     const inUse = given?.finished ? getBeans().filter((b) => !b.finished && sameCoffee(b, given)).at(-1) : null;
     const beanId = inUse?.id ?? wanted;
-    const active = getBeans().filter((b) => !b.finished || b.id === beanId);
+    const nextMethod = methodOf(startMethod).id;
+    const active = getBeans().filter((b) => (!b.finished || b.id === beanId) && suits(b, nextMethod));
     if (!active.length) return false;
     brewId = null;
-    method = methodOf(startMethod).id;
+    method = nextMethod;
     const lastBean = latestBrew(getBrews(), { method })?.beanId;
     const pick = [beanId, lastBean].find((id) => active.some((b) => b.id === id)) ?? active.at(-1).id;
     renderBeans(pick);
@@ -215,6 +221,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     }
     method = button.dataset.method;
     renderMethod();
+    renderBeans(bean.value);
     setSeconds(total);
     if (!brewId && !touched) prefill();
     renderLast();
@@ -347,7 +354,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
         return;
       }
       renderBeans(bean.value);
-      if (!bean.value) sheet.close();
+      if (!getBeans().length) sheet.close();
     },
   };
   return api;

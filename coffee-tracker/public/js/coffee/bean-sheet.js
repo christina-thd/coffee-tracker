@@ -1,6 +1,6 @@
 import { sendAction } from '../shared/api.js';
 import {
-  bagIdsOf, costOf, goodSettings, latestBrew, METHODS, parseNumber, PROCESSES, ROAST_FOR, ROASTS,
+  bagIdsOf, costOf, goodSettings, latestBrew, METHODS, parseNumber, PROCESSES, ROAST_FOR, ROASTS, suits,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
 import { agoText, money, plural } from '../shared/format.js';
@@ -77,6 +77,9 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     const bean = getBean();
     $('beanSummary').hidden = !bean;
     if (!bean) return;
+    for (const button of $('beanSummary').querySelectorAll('[data-log]')) {
+      if (button instanceof HTMLElement) button.hidden = !suits(bean, button.dataset.log);
+    }
     const beans = getBeans();
     const bags = bagIdsOf(beans, bean);
     const several = bags.size > 1;

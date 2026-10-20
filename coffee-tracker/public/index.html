@@ -26,6 +26,10 @@
     <header class="hero" id="hero" hidden>
       <img src="img/logo.svg" alt="" width="26" height="26">
       <p class="greeting" id="greeting"></p>
+      <div class="bean-filter" id="beanFilter" role="group" aria-label="Show beans for" hidden>
+        <button type="button" data-bean-filter="espresso" aria-pressed="false" aria-label="Espresso beans" title="Espresso beans"></button>
+        <button type="button" data-bean-filter="pourover" aria-pressed="false" aria-label="Pour over beans" title="Pour over beans"></button>
+      </div>
     </header>
 
     <div class="segmented tabs" id="tabs" role="tablist" hidden>

@@ -1,6 +1,6 @@
 // Method tabs: a recipe card per coffee (its sweet spot, else last try). Beans tab: a card per bag.
 import {
-  bagIdsOf, formatDuration, labelOf, latestBrew, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, VERDICTS,
+  bagIdsOf, formatDuration, labelOf, latestBrew, METHODS, PROCESSES, ratio, ROAST_FOR, ROASTS, sameCoffee, suits, VERDICTS,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
 import { clock, dayMonth, daysSince, money, num, plural } from '../shared/format.js';
@@ -26,7 +26,7 @@ const lastUsed = (bean, brews) => latestBrew(brews, { beanId: bean.id })?.brewed
 const verdictHtml = (verdict) =>
   (verdict ? `<span class="verdict" data-verdict="${verdict}">${labelOf(VERDICTS, verdict)}</span>` : '');
 
-function tryHtml(brew, bean, several) {
+function tryHtml(brew, bean, several, canLog) {
   const bag = several ? ` · ${bagLabel(bean)}` : '';
   const comment = brew.comment ? `<p class="brew-comment">${escapeHtml(brew.comment)}</p>` : '';
   return `<li class="brew" data-brew="${brew.id}" data-verdict="${brew.verdict ?? 'none'}">
@@ -36,7 +36,7 @@ function tryHtml(brew, bean, several) {
       <p class="brew-when">${dayMonth(brew.brewedAt)}, ${clock(brew.brewedAt)}${bag}</p>
     </div>
     <div class="brew-side">${verdictHtml(brew.verdict)}
-      <button type="button" class="again-button" data-again="${brew.id}" aria-label="Try again from this" title="Try again from this">${icon('repeat')}</button>
+      ${canLog ? `<button type="button" class="again-button" data-again="${brew.id}" aria-label="Try again from this" title="Try again from this">${icon('repeat')}</button>` : ''}
     </div>
   </li>`;
 }
@@ -72,11 +72,13 @@ function coffeeHtml(method, bean, beans, brews, opened, clearing) {
   const several = bags.size > 1;
   const tries = brews.filter((b) => bags.has(b.beanId)).sort((a, b) => b.brewedAt - a.brewedAt);
   const shown = tries.find((b) => b.verdict === 'good') ?? tries[0];
+  // roasted for the other method: its tries stay visible, but nothing new is logged here
+  const canLog = !bean.finished && suits(bean, method);
 
   if (!shown) {
     return `<li class="coffee coffee-new${bean.finished ? ' finished' : ''}" data-coffee="${bean.id}">
       <p class="bean-name">${escapeHtml(bean.name)}</p>
-      ${bean.finished ? '' : `<button type="button" class="card-action" data-log-coffee="${bean.id}">${icon('plus')}First ${method === 'espresso' ? 'shot' : 'brew'}</button>`}
+      ${canLog ? `<button type="button" class="card-action" data-log-coffee="${bean.id}">${icon('plus')}First ${method === 'espresso' ? 'shot' : 'brew'}</button>` : ''}
     </li>`;
   }
 
@@ -84,7 +86,7 @@ function coffeeHtml(method, bean, beans, brews, opened, clearing) {
   const clear = `<li class="clear-tries"><button type="button" class="pill danger${clearing ? ' armed' : ''}" data-clear="${bean.id}">${
     icon('trash')}<span>${clearing ? 'Tap again: delete all tries' : 'Delete all tries'}</span></button></li>`;
   const list = opened
-    ? `<ul class="tries">${tries.slice(0, opened).map((b) => tryHtml(b, beans.find((x) => x.id === b.beanId), several)).join('')}${
+    ? `<ul class="tries">${tries.slice(0, opened).map((b) => tryHtml(b, beans.find((x) => x.id === b.beanId), several, canLog)).join('')}${
       tries.length > opened ? `<li class="more"><button type="button" class="link" data-older="${bean.id}">Show older</button></li>` : ''}${clear}</ul>`
     : '';
 
@@ -94,7 +96,7 @@ function coffeeHtml(method, bean, beans, brews, opened, clearing) {
     ${recipeHtml(shown)}
     <div class="coffee-foot">
       <button type="button" class="card-link" data-tries="${bean.id}" aria-expanded="${opened > 0}">${opened ? 'Hide tries' : 'Tries'}${icon('chevron')}</button>
-      ${bean.finished ? '' : `<button type="button" class="card-action" data-again="${shown.id}">${icon('repeat')}Again</button>`}
+      ${canLog ? `<button type="button" class="card-action" data-again="${shown.id}">${icon('repeat')}Again</button>` : ''}
     </div>
     ${list}
   </li>`;
@@ -114,7 +116,7 @@ function coffeesOf(method, beans, brews) {
   for (const bean of newestFirst) {
     if (coffees.some((c) => sameCoffee(c, bean))) continue;
     const bags = bagIdsOf(beans, bean);
-    if (bean.finished && ![...bags].some((id) => made.has(id))) continue;
+    if ((bean.finished || !suits(bean, method)) && ![...bags].some((id) => made.has(id))) continue;
     coffees.push(bean);
   }
   const used = (bean) => latestBrew(brews.filter((b) => b.method === method && bagIdsOf(beans, bean).has(b.beanId)), {})?.brewedAt ?? 0;
@@ -143,7 +145,9 @@ function beanHtml(bean, beans, brews, currency, now) {
   const sub = [bean.roaster, bean.origin, labelOf(PROCESSES, bean.process)].filter(Boolean).join(' · ');
   const roast = bean.roast ? `<span class="roast" data-roast="${bean.roast}">${labelOf(ROASTS, bean.roast)}</span>` : '';
   const roastFor = ROAST_FOR.find((r) => r.id === bean.roastFor);
-  const forHtml = roastFor ? `<span class="roast-for">${roastFor.card}</span>` : '';
+  const forHtml = roastFor && roastFor.id !== 'other'
+    ? `<span class="roast-for" title="${roastFor.card}" aria-label="${roastFor.card}">${icon(roastFor.id)}</span>`
+    : '';
   const bags = bagIdsOf(beans, bean);
   const ofBags = brews.filter((b) => bags.has(b.beanId));
   const dial = METHODS.map((m) => {
@@ -159,8 +163,10 @@ function beanHtml(bean, beans, brews, currency, now) {
   </li>`;
 }
 
-function beansHtml(beans, brews, currency, now) {
-  const byUse = [...beans].sort((a, b) => lastUsed(b, brews) - lastUsed(a, brews));
+/** `filter`: 'all', or a method: the beans that suit it. */
+function beansHtml(beans, brews, currency, now, filter) {
+  const byUse = [...beans].filter((b) => filter === 'all' || suits(b, filter))
+    .sort((a, b) => lastUsed(b, brews) - lastUsed(a, brews));
   const card = (b) => beanHtml(b, beans, brews, currency, now);
   const finished = byUse.filter((b) => b.finished);
   return byUse.filter((b) => !b.finished).map(card).join('')
@@ -169,35 +175,53 @@ function beansHtml(beans, brews, currency, now) {
 
 /**
  * @param {{ beans: Bean[], brews: Brew[], currency: string, tab: string, opened: Record<string, number>,
- *   clearing?: string | null }} options  keys are "method:beanId"
+ *   clearing?: string | null, beanFilter?: string }} options  keys are "method:beanId"
  */
-export function renderBoard({ beans, brews, currency, tab, opened, clearing = null }) {
+export function renderBoard({ beans, brews, currency, tab, opened, clearing = null, beanFilter = 'all' }) {
   const now = Date.now();
   for (const name of TABS) {
     const column = /** @type {HTMLElement} */ ($('board').querySelector(`.column[data-tab="${name}"]`));
     const list = column.querySelector('.list');
     const empty = /** @type {HTMLElement} */ (column.querySelector('.empty'));
-    list.innerHTML = name === 'beans' ? beansHtml(beans, brews, currency, now) : brewColumnHtml(name, beans, brews, opened, clearing);
+    list.innerHTML = name === 'beans'
+      ? beansHtml(beans, brews, currency, now, beanFilter)
+      : brewColumnHtml(name, beans, brews, opened, clearing);
     empty.hidden = list.children.length > 0;
-    empty.textContent = EMPTY[name];
+    empty.textContent = name === 'beans' && beans.length
+      ? `No beans for ${METHODS.find((m) => m.id === beanFilter)?.label.toLowerCase()}.`
+      : EMPTY[name];
     column.classList.toggle('current', name === tab);
     const tabButton = $('tabs').querySelector(`[data-tab="${name}"]`);
     tabButton.classList.toggle('selected', name === tab);
     tabButton.setAttribute('aria-selected', String(name === tab));
   }
   $('board').dataset.tab = tab;
+  $('beanFilter').hidden = beans.length < 2;
+  $('beanFilter').classList.toggle('on-beans', tab === 'beans');
+  for (const button of $('beanFilter').querySelectorAll('[data-bean-filter]')) {
+    if (!(button instanceof HTMLElement)) continue;
+    if (!button.firstChild) button.innerHTML = icon(button.dataset.beanFilter);
+    const selected = button.dataset.beanFilter === beanFilter;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
 }
 
 /**
  * @param {{ onTab(tab: string): void, onLog(method: string, beanId: string): void, onAgain(brewId: string): void,
  *   onTries(method: string, beanId: string): void, onOlder(method: string, beanId: string): void,
- *   onClear(method: string, beanId: string): void,
+ *   onClear(method: string, beanId: string): void, onBeanFilter(filter: string): void,
  *   onOpenBrew(id: string): void, onOpenBean(id: string): void }} handlers
  */
 export function wireBoard(handlers) {
   $('tabs').addEventListener('click', (e) => {
     const tab = closest(e, '[data-tab]');
     if (tab) handlers.onTab(tab.dataset.tab);
+  });
+  $('beanFilter').addEventListener('click', (e) => {
+    const button = closest(e, '[data-bean-filter]');
+    // tapping the one that's on turns it off: all beans
+    if (button) handlers.onBeanFilter(button.classList.contains('selected') ? 'all' : button.dataset.beanFilter);
   });
   $('board').addEventListener('click', (e) => {
     const method = closest(e, '.column')?.dataset.tab;

@@ -37,6 +37,20 @@ body.offline .offline-badge { display: inline-flex; }
   box-shadow: 0 8px 20px -6px var(--bg);
 }
 .tabs > button { min-height: 40px; }
+/* in the greeting row, on the Beans tab (always on wide screens): tap one to show its beans, again for all */
+.bean-filter { display: none; gap: 6px; margin-left: auto; }
+.bean-filter.on-beans { display: flex; }
+.bean-filter > button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.bean-filter > button svg.icon { width: 16px; height: 16px; }
+.bean-filter > button.selected { border-color: transparent; background: var(--accent); color: var(--accent-ink); }
 
 .board { margin-top: 12px; }
 .column { display: none; }
@@ -73,6 +87,7 @@ body.offline .offline-badge { display: inline-flex; }
   }
   .column-head { display: flex; padding: 0 4px; }
   .brew:hover, .bean:hover { background: var(--surface-2); }
+  .bean-filter { display: flex; }
 }
 
 /* ----- hero ----- */
@@ -257,14 +272,16 @@ body.offline .offline-badge { display: inline-flex; }
   font-weight: 700;
 }
 .roast-for {
+  display: grid;
+  place-items: center;
   flex: none;
-  padding: 1px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 600;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--accent);
 }
+.roast-for svg.icon { width: 15px; height: 15px; }
 .roast[data-roast="light"] { --roast: var(--light); }
 .roast[data-roast="medium"] { --roast: var(--medium); }
 .roast[data-roast="medium-dark"] { --roast: var(--medium-dark); color: var(--ink); }

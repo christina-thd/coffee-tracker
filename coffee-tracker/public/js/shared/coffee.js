@@ -28,6 +28,13 @@ export const ROAST_FOR = Object.freeze([
   { id: 'other', label: 'Other', card: 'Other roast' },
 ]);
 
+/**
+ * A bean roasted for one method isn't offered for the other; "other" or unset suits both.
+ * @param {Bean} bean
+ * @param {string} method
+ */
+export const suits = (bean, method) => !bean.roastFor || bean.roastFor === 'other' || bean.roastFor === method;
+
 export const PROCESSES = Object.freeze([
   { id: 'washed', label: 'Washed' },
   { id: 'natural', label: 'Natural' },

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  bagIdsOf, costOf, formatDuration, goodSettings, isDate, latestBrew, parseNumber, ratio, sameCoffee,
+  bagIdsOf, costOf, formatDuration, goodSettings, isDate, latestBrew, parseNumber, ratio, sameCoffee, suits,
 } from '../public/js/shared/coffee.js';
 
 test('numbers as typed on a phone', () => {
@@ -73,6 +73,15 @@ test('good settings of some bags: one per grind, dose and yield, counted, newest
   ]);
   const found = goodSettings(brews, { beanIds: new Set(['bag1', 'bag2']), method: 'espresso' });
   assert.deepEqual(found.map((g) => [g.brew.id, g.count]), [['b', 2], ['c', 1]]);
+});
+
+test('a bean roasted for one method is only offered for it', () => {
+  const bean = (roastFor) => /** @type {any} */ ({ roastFor });
+  assert.ok(suits(bean('espresso'), 'espresso'));
+  assert.ok(!suits(bean('espresso'), 'pourover'));
+  assert.ok(!suits(bean('pourover'), 'espresso'));
+  assert.ok(suits(bean('other'), 'pourover'));
+  assert.ok(suits(bean(null), 'espresso'));
 });
 
 test('every bag of a coffee', () => {
