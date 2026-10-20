@@ -331,6 +331,7 @@ body.offline .offline-badge { display: inline-flex; }
   padding: 0 16px 8px;
 }
 .sheet-title { flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17px; font-weight: 700; }
+.sheet-close.armed { color: var(--danger); }
 .sheet-close { margin-left: auto; padding: 8px 4px; color: var(--accent); font-size: 15px; font-weight: 600; }
 
 .sheet-body {

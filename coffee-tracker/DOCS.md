@@ -68,6 +68,10 @@ bag of it); it asks too, as neither can be undone. The coffee itself stays.
 
 Messages at the bottom of the screen say what was done ("Saved", "Deleted"); tap one to dismiss it.
 
+Closing a brew or a bean with changes that aren't saved yet (Close, a tap outside, a swipe down or the back button)
+asks first: **Close** turns into **Discard changes?** for a few seconds. Close again to throw the changes away, or save
+them.
+
 ## Beans
 
 The Beans tab has a card per bag: its roast, what it was roasted for (a cup for espresso, a dripper for pour over: a coffee roasted for one is only offered for logging that way; the same two buttons at the top right show just the beans for that method, tap again for all), its roaster, origin and process, the price and bag size, how

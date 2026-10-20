@@ -62,16 +62,50 @@ function enableDragToClose(panel, close) {
   }, true);
 }
 
+const DISCARD_MS = 3000;
+
 /**
+ * With unsaved changes (`isDirty`), any way of closing asks first: Close turns into "Discard changes?" for a few
+ * seconds, and closing again then discards.
  * @param {HTMLElement} layer
- * @param {{ onClose?: () => void }} [options]
+ * @param {{ onClose?: () => void, isDirty?: () => boolean }} [options]
  */
-export function createSheet(layer, { onClose } = {}) {
+export function createSheet(layer, { onClose, isDirty } = {}) {
   const panel = /** @type {HTMLElement} */ (layer.querySelector('.sheet'));
+  const closeButton = /** @type {HTMLElement | null} */ (panel.querySelector('.sheet-close'));
+  const closeLabel = closeButton?.textContent ?? '';
   let isOpen = false;
   let closing = false;              // going back is async: don't go back twice
+  let leaving = false;              // this close was allowed: hide() mustn't block it
+  let discard = null;               // the "Discard changes?" timer while it's asking
+
+  function disarm() {
+    clearTimeout(discard);
+    discard = null;
+    if (!closeButton) return;
+    closeButton.textContent = closeLabel;
+    closeButton.classList.remove('armed');
+  }
+
+  /** True if this close has to wait: unsaved changes, and not asked yet. */
+  function blocked() {
+    if (discard || !isDirty?.()) return false;
+    discard = setTimeout(disarm, DISCARD_MS);
+    if (closeButton) {
+      closeButton.textContent = 'Discard changes?';
+      closeButton.classList.add('armed');
+    }
+    panel.style.transform = '';     // a swipe springs back
+    return true;
+  }
 
   function hide() {
+    if (!leaving && blocked()) {
+      pushBack(hide);               // the phone's back button: stay open
+      return;
+    }
+    leaving = false;
+    disarm();
     isOpen = false;
     closing = false;
     stack.splice(stack.indexOf(sheet), 1);
@@ -105,10 +139,15 @@ export function createSheet(layer, { onClose } = {}) {
       layer.classList.add('open');
     },
 
-    /** Closes through history, so open()'s entry goes away too. */
-    close() {
+    /**
+     * Closes through history, so open()'s entry goes away too. `force`: after saving or deleting, nothing to ask.
+     * @param {{ force?: boolean }} [options]
+     */
+    close({ force = false } = {}) {
       if (!isOpen || closing) return;
+      if (!force && blocked()) return;
       closing = true;
+      leaving = true;
       goBack();
     },
   };

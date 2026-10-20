@@ -40,11 +40,17 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
   let touched = false;                             // typed settings survive a coffee/method change
   let armed = false;
   let busy = false;
+  let shownAs = '';                                // the form as it was opened: anything else is unsaved
+
+  const formState = () => JSON.stringify([bean.value, method, grind.value, minutes.value, seconds.value, dose.value,
+    out.value, temp.value, verdict, comment.value]);
 
   const sheet = createSheet($('brewLayer'), {
+    isDirty: () => Boolean(shownAs) && formState() !== shownAs,
     onClose: () => {
       /** @type {HTMLElement} */ (document.activeElement)?.blur?.();
       brewId = null;
+      shownAs = '';
     },
   });
 
@@ -280,7 +286,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     try {
       if (editing) await sendAction({ type: 'editBrew', brewId: editing, ...brew });
       else await sendAction({ type: 'addBrew', ...brew });
-      sheet.close();
+      sheet.close({ force: true });
       toast(!editing && brew.verdict === 'good' ? 'Saved: sweet spot' : 'Saved', { icon: 'check' });
     } catch (err) {
       toastError(err);
@@ -298,7 +304,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       remove.innerHTML = `${icon('trash')}<span>Tap again to delete</span>`;
       return;
     }
-    sheet.close();
+    sheet.close({ force: true });
     sendAction({ type: 'removeBrew', brewId: brew.id })
       .then(() => onDeleted(brew))
       .catch(toastError);
@@ -314,6 +320,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     $('brewSave').textContent = brewId ? 'Save' : 'Log it';
     $('brewExtra').hidden = !brewId;
     sheet.open();
+    shownAs = formState();
   }
 
   const api = {
@@ -349,12 +356,12 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       if (!sheet.isOpen) return;
       if (brewId && !getBrew()) {
         brewId = null;
-        sheet.close();
+        sheet.close({ force: true });
         toast('That brew was deleted');
         return;
       }
       renderBeans(bean.value);
-      if (!getBeans().length) sheet.close();
+      if (!getBeans().length) sheet.close({ force: true });
     },
   };
   return api;

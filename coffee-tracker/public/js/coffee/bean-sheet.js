@@ -41,11 +41,17 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   let armed = false;
   let busy = false;
   const expanded = new Set();                      // methods showing all good settings
+  let shownAs = '';                                // the form as it was filled: anything else is unsaved
+
+  const formState = () => JSON.stringify([...Object.values(TEXT_FIELDS).map((id) => input(id).value), process.value, roast,
+    roastFor, roastedOn.value, price.value, weight.value, notes.value]);
 
   const sheet = createSheet($('beanLayer'), {
+    isDirty: () => Boolean(shownAs) && formState() !== shownAs,
     onClose: () => {
       /** @type {HTMLElement} */ (document.activeElement)?.blur?.();
       beanId = null;
+      shownAs = '';
     },
   });
 
@@ -188,7 +194,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     try {
       if (editing) await sendAction({ type: 'editBean', beanId: editing, ...fields });
       else await sendAction({ type: 'addBean', ...fields });
-      sheet.close();
+      sheet.close({ force: true });
       toast(editing ? 'Saved' : `Added ${fields.name}`, { icon: 'check' });
     } catch (err) {
       toastError(err);
@@ -214,7 +220,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
       armed = true;
       return renderExtra();
     }
-    sheet.close();
+    sheet.close({ force: true });
     sendAction({ type: 'removeBean', beanId: bean.id })
       .then(() => toast(`Deleted ${bean.name}`, { icon: 'trash' }))
       .catch(toastError);
@@ -247,6 +253,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     renderRoast();
     renderSummary();
     renderExtra();
+    shownAs = formState();
   }
 
   // reuse this sheet for the new bag, so back still closes it
@@ -273,7 +280,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
       if (!sheet.isOpen || !beanId) return;
       if (!getBean()) {
         beanId = null;
-        sheet.close();
+        sheet.close({ force: true });
         return;
       }
       renderSummary();
