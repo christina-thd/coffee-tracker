@@ -90,7 +90,7 @@ function coffeeHtml(method, bean, beans, brews, opened, clearing) {
       tries.length > opened ? `<li class="more"><button type="button" class="link" data-older="${bean.id}">Show older</button></li>` : ''}${clear}</ul>`
     : '';
 
-  return `<li class="coffee${bean.finished ? ' finished' : ''}" data-coffee="${bean.id}">
+  return `<li class="coffee coffee-opens${bean.finished ? ' finished' : ''}${opened ? ' open' : ''}" data-coffee="${bean.id}" data-card-tries="${bean.id}">
     <div class="coffee-head"><p class="bean-name">${escapeHtml(bean.name)}</p>${statusHtml(shown)}</div>
     ${from}
     ${recipeHtml(shown)}
@@ -241,6 +241,9 @@ export function wireBoard(handlers) {
     if (clear) return handlers.onClear(method, clear.dataset.clear);
     const brew = closest(e, '[data-brew]');
     if (brew) return handlers.onOpenBrew(brew.dataset.brew);
+    // anywhere else on a coffee's card (not in its open list) opens or closes its tries
+    const card = closest(e, '[data-card-tries]');
+    if (card && !closest(e, '.tries')) return handlers.onTries(method, card.dataset.cardTries);
     const bean = closest(e, '[data-bean-open]');
     if (bean) handlers.onOpenBean(bean.dataset.beanOpen);
   });

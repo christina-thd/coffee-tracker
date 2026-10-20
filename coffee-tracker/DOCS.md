@@ -28,7 +28,7 @@ On the Espresso and Pour over tabs, each coffee (every bag of it together) has a
 - **Top right**: how it came out: **✓ sweet spot**, or the last try's taste with which way to grind ("sour · grind
   finer", "bitter · grind coarser").
 - **Again**: a new try, copied from the recipe shown.
-- **Tries**: every try, newest first; **Show older** shows more. Tap one to change or delete
+- **Tries** (tap anywhere on the card): every try, newest first; **Show older** shows more. Tap one to change or delete
   it; its ↻ button starts a new try copied from it.
 - A coffee not made that way yet just has **First shot** (or **First brew**).
 

@@ -99,6 +99,10 @@ body.offline .offline-badge { display: inline-flex; }
 /* ----- recipe cards ----- */
 
 .coffee { padding: 14px 16px 10px; border-radius: 18px; background: var(--surface); }
+/* the whole card opens its tries */
+.coffee-opens { cursor: pointer; transition: background 160ms; }
+.coffee-opens:active:not(:has(button:active, .tries:active)) { background: var(--surface-2); }
+.coffee-opens.open { background: var(--surface-2); }
 .coffee.finished { opacity: 0.6; }
 .coffee-head { display: flex; align-items: baseline; gap: 10px; }
 .coffee-head .bean-name { font-size: 16px; }
