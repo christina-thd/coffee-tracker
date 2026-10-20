@@ -40,6 +40,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
   let touched = false;                             // typed settings survive a coffee/method change
   let armed = false;
   let busy = false;
+  let picked = null;                               // the coffee chosen: back again when the method allows it
   let shownAs = '';                                // the form as it was opened: anything else is unsaved
 
   const formState = () => JSON.stringify([bean.value, method, grind.value, minutes.value, seconds.value, dose.value,
@@ -202,6 +203,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     method = nextMethod;
     const lastBean = latestBrew(getBrews(), { method })?.beanId;
     const pick = [beanId, lastBean].find((id) => active.some((b) => b.id === id)) ?? active.at(-1).id;
+    picked = pick;
     renderBeans(pick);
     verdict = null;
     touched = Boolean(from);
@@ -227,13 +229,14 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     }
     method = button.dataset.method;
     renderMethod();
-    renderBeans(bean.value);
+    renderBeans(picked);
     setSeconds(total);
     if (!brewId && !touched) prefill();
     renderLast();
   });
 
   bean.addEventListener('change', () => {
+    picked = bean.value;
     if (!brewId && !touched) prefill();
     renderLast();
   });
@@ -339,6 +342,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       if (!brew) return;
       brewId = brew.id;
       method = brew.method;
+      picked = brew.beanId;
       renderBeans(brew.beanId);
       grind.value = brew.grind;
       grind.placeholder = '';

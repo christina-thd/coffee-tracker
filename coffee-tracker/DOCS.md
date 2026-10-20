@@ -81,13 +81,19 @@ What it was roasted for (espresso, pour over or other) decides where it's offere
 offered for logging that way. The cup and dripper buttons at the top right show just the beans for that method; tap
 again for all.
 
-Tap a card to open it. At the top is what worked, per kind: the settings that **came out good**, newest first, with
-every bag of this coffee. The same settings logged good again say so ("15× good"), and each says which bag it was. The
-newest 3 show; **See all** shows the rest. **See all tries** opens that kind's tab with this coffee's tries open. It also shows what a cup costs (price ÷ bag size × dose). **Log espresso** and **Log pour over** log a brew
-of it straight away. Below are all its details, to change and **Save**. Under the name, rate it from one to five stars (tap the same star again to clear it). **Bag** is the size you bought: 250g, 500g,
-1kg, or **Other** to type the grams. Under **Taste**, score its body (light to
-full), acidity (low to bright), sweetness and aftertaste (short to long) from 1 to 5 by tapping a dot; tap it again to
-clear it.
+Tap a card to open it: a page to read, not a form. Under the name are its roaster, roast, what it was roasted for and
+how many days it is off roast, then your stars (tap one to rate it straight away, and a message says so; tap it again
+to clear it) and **Log
+espresso** / **Log pour over**. **Sweet spots and tries** unfolds what worked, per kind: the settings that **came out
+good**, newest first, with every bag of this coffee ("15× good" when logged good again, and which bag), what a cup
+costs (price ÷ bag size × dose), and **See all tries**. Below are its taste, bag, origin and notes, whichever are
+filled in.
+
+**Edit** at the top turns the page into the form; **Save** takes you back to the page. Adding a new coffee asks only
+for the essentials (name, roaster, roast date, roast, what it's roasted for, bag and price); **More details** has the
+rating, origin, variety, process, where you bought it, tasting notes, taste and notes. **Bag** is the size you bought:
+250g, 500g, 1kg, or **Other** to type the grams. Under **Taste**, score its body (light to full), acidity (low to
+bright), sweetness and aftertaste (short to long) from 1 to 5 by tapping a dot; tap it again to clear it.
 
 When the bag is empty, tap **Bag finished**: it moves to the end of the list, isn't offered for new brews, and keeps
 its history. **Back in use** undoes it.

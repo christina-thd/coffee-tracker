@@ -1,9 +1,10 @@
 import { sendAction } from '../shared/api.js';
 import {
-  bagIdsOf, costOf, goodSettings, latestBrew, METHODS, parseNumber, PROCESSES, MAX_SCORE, ROAST_FOR, ROASTS, suits, TASTE,
+  bagIdsOf, costOf, goodSettings, labelOf, latestBrew, METHODS, parseNumber, PROCESSES, MAX_SCORE, ROAST_FOR, ROASTS, suits,
+  TASTE,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
-import { agoText, money, plural } from '../shared/format.js';
+import { agoText, bagSize, daysSince, money, plural, shortDate } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
 import { createSheet } from '../ui/sheet.js';
 import { toast, toastError } from '../ui/toast.js';
@@ -44,12 +45,16 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   let busy = false;
   const expanded = new Set();                      // methods showing all good settings
   let shownAs = '';                                // the form as it was filled: anything else is unsaved
+  /** @type {'view' | 'edit'} */
+  let mode = 'edit';                               // 'view': an existing coffee to read; 'edit': the form
+  let dialOpen = false;                            // sweet spots unfolded (view)
+  let moreOpen = false;                            // "More details" unfolded (form)
 
   const formState = () => JSON.stringify([...Object.values(TEXT_FIELDS).map((id) => input(id).value), process.value, roast,
     roastFor, roastedOn.value, price.value, weight.value, notes.value, taste, rating]);
 
   const sheet = createSheet($('beanLayer'), {
-    isDirty: () => Boolean(shownAs) && formState() !== shownAs,
+    isDirty: () => mode === 'edit' && Boolean(shownAs) && formState() !== shownAs,
     onClose: () => {
       /** @type {HTMLElement} */ (document.activeElement)?.blur?.();
       beanId = null;
@@ -62,10 +67,107 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   process.innerHTML = `<option value="">–</option>${PROCESSES.map((p) => `<option value="${p.id}">${p.label}</option>`).join('')}`;
   $('beanRoast').innerHTML = ROASTS.map((r) => `<button type="button" role="radio" data-roast="${r.id}">${r.label}</button>`).join('');
   $('beanRoastFor').innerHTML = ROAST_FOR.map((r) => `<button type="button" role="radio" data-roast-for="${r.id}">${r.label}</button>`).join('');
-  for (const button of $('beanSummary').querySelectorAll('[data-log]')) {
+  for (const button of $('beanLogRow').querySelectorAll('[data-log]')) {
     const method = METHODS.find((m) => m.id === /** @type {HTMLElement} */ (button).dataset.log);
     button.innerHTML = `${icon(method.id)}<span>Log ${method.label.toLowerCase()}</span>`;
   }
+
+  // ----- the page an existing coffee opens on -----
+
+  const starsHtml = (score, attr) => Array.from({ length: MAX_SCORE }, (_, i) =>
+    `<button type="button" role="radio" ${attr}="${i + 1}" class="${score != null && i < score ? 'on' : ''}"
+      aria-checked="${i + 1 === score}" aria-label="${i + 1} of ${MAX_SCORE} stars">${icon('star')}</button>`).join('');
+
+  const dotsHtml = (score) => `<span class="view-dots">${Array.from({ length: MAX_SCORE }, (_, i) =>
+    `<span class="${i < score ? 'on' : ''}"></span>`).join('')}</span>`;
+
+  function renderView() {
+    const bean = getBean();
+    if (!bean) return;
+    const roastFor = ROAST_FOR.find((r) => r.id === bean.roastFor && r.id !== 'other');
+    $('viewLine').innerHTML = [
+      escapeHtml(bean.roaster),
+      bean.roast ? `<span class="roast-dot" data-roast="${bean.roast}"></span>${labelOf(ROASTS, bean.roast)}` : '',
+      roastFor ? `for ${roastFor.label.toLowerCase()}` : '',
+      bean.roastedOn && !bean.finished ? `${plural(daysSince(bean.roastedOn), 'day')} off roast` : '',
+    ].filter(Boolean).join(' · ');
+    $('viewRating').innerHTML = starsHtml(rating, 'data-quick-rate');
+    for (const button of $('beanLogRow').querySelectorAll('[data-log]')) {
+      if (button instanceof HTMLElement) button.hidden = bean.finished || !suits(bean, button.dataset.log);
+    }
+
+    const brewed = getBrews().some((b) => bagIdsOf(getBeans(), bean).has(b.beanId));
+    const toggle = $('beanDialToggle');
+    toggle.hidden = !brewed;
+    toggle.setAttribute('aria-expanded', String(dialOpen));
+    toggle.innerHTML = `<span>${dialOpen ? 'Hide sweet spots' : 'Sweet spots and tries'}</span>${icon('chevron')}`;
+
+    const section = (label, body) => (body ? `<div class="view-section"><p class="view-label">${label}</p>${body}</div>` : '');
+    const scored = TASTE.filter((t) => bean[t.id] != null);
+    const tasteBody = (bean.flavor ? `<p class="view-flavor">${escapeHtml(bean.flavor)}</p>` : '')
+      + scored.map((t) => `<p class="view-taste"><span>${t.label}</span>${dotsHtml(bean[t.id])}</p>`).join('');
+    const bag = [bean.price != null ? money(bean.price, getCurrency()) : '', bean.weight ? bagSize(bean.weight) : '',
+      bean.shop ? escapeHtml(bean.shop) : ''].filter(Boolean).join(' · ');
+    const origin = [bean.origin, bean.variety, labelOf(PROCESSES, bean.process)].filter(Boolean).map(escapeHtml).join(' · ');
+    const roasted = bean.roastedOn ? `Roasted ${shortDate(bean.roastedOn)}` : '';
+    $('viewDetails').innerHTML = section('Taste', tasteBody)
+      + section('Bag', [bag, roasted].filter(Boolean).map((t) => `<p>${t}</p>`).join(''))
+      + section('Origin', origin ? `<p>${origin}</p>` : '')
+      + section('Notes', bean.notes ? `<p class="view-notes">${escapeHtml(bean.notes)}</p>` : '');
+  }
+
+  $('beanDialToggle').addEventListener('click', () => {
+    dialOpen = !dialOpen;
+    renderSummary();
+    renderView();
+  });
+
+  // rating straight from the page, without editing
+  $('viewRating').addEventListener('click', (e) => {
+    const star = closest(e, '[data-quick-rate]');
+    const bean = getBean();
+    if (!star || !bean) return;
+    const n = Number(star.dataset.quickRate);
+    rating = rating === n ? null : n;
+    renderRating();
+    shownAs = formState();
+    renderView();
+    sendAction({ type: 'editBean', beanId: bean.id, rating })
+      .then(() => toast(rating ? `Rated ${plural(rating, 'star')}` : 'Rating cleared', { icon: 'star' }))
+      .catch(toastError);
+  });
+
+  function renderMore() {
+    $('beanMore').hidden = !moreOpen;
+    const toggle = $('beanMoreToggle');
+    toggle.setAttribute('aria-expanded', String(moreOpen));
+    toggle.innerHTML = `<span>${moreOpen ? 'Fewer details' : 'More details'}</span>${icon('chevron')}`;
+  }
+
+  $('beanMoreToggle').addEventListener('click', () => {
+    moreOpen = !moreOpen;
+    renderMore();
+  });
+
+  /** @param {'view' | 'edit'} next */
+  function setMode(next) {
+    mode = next;
+    const view = mode === 'view';
+    $('beanView').hidden = !view;
+    $('beanFields').hidden = view;
+    $('beanSave').hidden = view;
+    $('beanEdit').hidden = !view;
+    $('beanExtra').hidden = !view || !getBean();
+    if (view) renderView();
+    renderMore();
+  }
+
+  $('beanEdit').addEventListener('click', () => {
+    moreOpen = true;                               // an existing coffee: every field, to change any of them
+    setMode('edit');
+    shownAs = formState();
+    /** @type {HTMLElement} */ ($('beanForm')).scrollTop = 0;
+  });
 
   const BAGS = [250, 500, 1000];
   let bagOther = false;                            // "Other" picked: the grams field shows
@@ -112,11 +214,8 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   /** Per method: good settings across all bags, cost per cup, and a link to all tries. */
   function renderSummary() {
     const bean = getBean();
-    $('beanSummary').hidden = !bean;
+    $('beanSummary').hidden = !bean || !dialOpen;
     if (!bean) return;
-    for (const button of $('beanSummary').querySelectorAll('[data-log]')) {
-      if (button instanceof HTMLElement) button.hidden = !suits(bean, button.dataset.log);
-    }
     const beans = getBeans();
     const bags = bagIdsOf(beans, bean);
     const several = bags.size > 1;
@@ -161,7 +260,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
 
   function renderExtra() {
     const bean = getBean();
-    $('beanExtra').hidden = !bean;
+    $('beanExtra').hidden = !bean || mode !== 'view';
     if (!bean) return;
     again.hidden = !bean.finished;
     again.innerHTML = `${icon('plus')}<span>Bought again</span>`;
@@ -254,7 +353,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     renderTaste();
   });
 
-  $('beanSummary').addEventListener('click', (e) => {
+  $('beanLogRow').addEventListener('click', (e) => {
     const button = closest(e, '[data-log]');
     if (button && beanId) onLog(button.dataset.log, beanId);
   });
@@ -272,10 +371,17 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     busy = true;
     const editing = beanId;
     try {
-      if (editing) await sendAction({ type: 'editBean', beanId: editing, ...fields });
-      else await sendAction({ type: 'addBean', ...fields });
-      sheet.close({ force: true });
-      toast(editing ? 'Saved' : `Added ${fields.name}`, { icon: 'check' });
+      if (editing) {
+        await sendAction({ type: 'editBean', beanId: editing, ...fields });
+        shownAs = formState();
+        $('beanTitle').textContent = fields.name;
+        setMode('view');                           // back to the page, with the changes
+        toast('Saved', { icon: 'check' });
+      } else {
+        await sendAction({ type: 'addBean', ...fields });
+        sheet.close({ force: true });
+        toast(`Added ${fields.name}`, { icon: 'check' });
+      }
     } catch (err) {
       toastError(err);
     } finally {
@@ -336,9 +442,13 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     $('beanHint').textContent = from
       ? 'Same coffee, new bag: fill in its roast date, and check the price and where you bought it.'
       : '';
+    dialOpen = false;
+    moreOpen = Boolean(from);                      // bought again: the copied details are worth checking
+    mode = existing ? 'view' : 'edit';
     renderRoast();
     renderSummary();
     renderExtra();
+    setMode(mode);
     shownAs = formState();
   }
 
@@ -371,6 +481,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
       }
       renderSummary();
       renderExtra();
+      if (mode === 'view') renderView();
     },
   };
 }
