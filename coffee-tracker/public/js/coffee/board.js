@@ -26,14 +26,12 @@ const lastUsed = (bean, brews) => latestBrew(brews, { beanId: bean.id })?.brewed
 const verdictHtml = (verdict) =>
   (verdict ? `<span class="verdict" data-verdict="${verdict}">${labelOf(VERDICTS, verdict)}</span>` : '');
 
-function tryHtml(brew, bean, several, canLog) {
-  const bag = several ? `<p class="brew-bag">${bagLabel(bean)}</p>` : '';
+function tryHtml(brew, canLog) {
   const comment = brew.comment ? `<p class="brew-comment">${escapeHtml(brew.comment)}</p>` : '';
   return `<li class="brew" data-brew="${brew.id}" data-verdict="${brew.verdict ?? 'none'}">
     <div class="brew-main">
       <p class="specs">${specsHtml(brew, { short: true })}</p>
       ${comment}
-      ${bag}
     </div>
     <div class="brew-side">${verdictHtml(brew.verdict)}
       ${canLog ? `<button type="button" class="again-button" data-again="${brew.id}" aria-label="Try again from this" title="Try again from this">${icon('repeat')}</button>` : ''}
@@ -86,7 +84,7 @@ function coffeeHtml(method, bean, beans, brews, opened, clearing) {
   const clear = `<li class="clear-tries"><button type="button" class="pill danger${clearing ? ' armed' : ''}" data-clear="${bean.id}">${
     icon('trash')}<span>${clearing ? 'Tap again: delete all tries' : 'Delete all tries'}</span></button></li>`;
   const list = opened
-    ? `<ul class="tries">${tries.slice(0, opened).map((b) => tryHtml(b, beans.find((x) => x.id === b.beanId), several, canLog)).join('')}${
+    ? `<ul class="tries">${tries.slice(0, opened).map((b) => tryHtml(b, canLog)).join('')}${
       tries.length > opened ? `<li class="more"><button type="button" class="link" data-older="${bean.id}">Show older</button></li>` : ''}${clear}</ul>`
     : '';
 
