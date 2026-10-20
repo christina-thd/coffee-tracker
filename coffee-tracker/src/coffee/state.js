@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import {
   idsOf, isDate, LIMITS, MAX_BEANS, MAX_BREWS, MAX_GRIND, MAX_NAME, MAX_NOTE, MAX_TEXT, METHOD_IDS, PROCESSES, ROAST_FOR,
-  ROASTS, VERDICTS,
+  ROASTS, TASTE, isScore, VERDICTS,
 } from '../../public/js/shared/coffee.js';
 
 export const SCHEMA_VERSION = 1;
@@ -43,6 +43,7 @@ export function emptyBean(now) {
     process: null,
     roast: null,
     roastFor: null,
+    ...Object.fromEntries(TASTE.map((t) => [t.id, null])),
     roastedOn: null,
     price: null,
     weight: null,
@@ -79,6 +80,7 @@ function normalizeBean(raw, now) {
     process: pick(raw.process, PROCESSES),
     roast: pick(raw.roast, ROASTS),
     roastFor: pick(raw.roastFor, ROAST_FOR),
+    ...Object.fromEntries(TASTE.map((t) => [t.id, isScore(raw[t.id]) ? raw[t.id] : null])),
     roastedOn: isDate(raw.roastedOn) ? raw.roastedOn : null,
     price: cleanNumber(raw.price, LIMITS.price),
     weight: cleanNumber(raw.weight, LIMITS.weight),

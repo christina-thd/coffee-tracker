@@ -1,6 +1,6 @@
 import {
   idsOf, isDate, LIMITS, MAX_BEANS, MAX_BREWS, MAX_GRIND, MAX_NAME, MAX_NOTE, MAX_TEXT, METHODS, PROCESSES, ROAST_FOR,
-  ROASTS, VERDICTS,
+  ROASTS, TASTE, isScore, MAX_SCORE, VERDICTS,
 } from '../../public/js/shared/coffee.js';
 import { BEAN_TEXT_FIELDS, cleanText, emptyBean, emptyBrew, findBean, findBrew } from './state.js';
 
@@ -55,6 +55,11 @@ const BEAN_FIELDS = {
   process: (value) => choice(value, PROCESSES, 'process'),
   roast: (value) => choice(value, ROASTS, 'roast'),
   roastFor: (value) => choice(value, ROAST_FOR, 'roastFor'),
+  ...Object.fromEntries(TASTE.map((t) => [t.id, (value) => {
+    if (value == null || value === '') return null;
+    if (!isScore(value)) throw new ActionError(`${t.id} must be a whole number from 1 to ${MAX_SCORE}`);
+    return value;
+  }])),
   roastedOn: (value) => {
     if (value == null || value === '') return null;
     if (!isDate(value)) throw new ActionError('roastedOn must be a date (YYYY-MM-DD)');

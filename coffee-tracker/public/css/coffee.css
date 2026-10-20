@@ -346,6 +346,17 @@ body.offline .offline-badge { display: inline-flex; }
 .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
 .settings-label { margin: 2px 2px -4px; color: var(--muted); font-size: 12.5px; font-weight: 600; }
 
+/* bean sheet: body, acidity, sweetness, aftertaste as five dots each */
+.taste { display: flex; flex-direction: column; gap: 4px; padding: 6px 12px; border-radius: 11px; background: var(--surface-2); }
+.taste-row { display: grid; grid-template-columns: 78px 44px 1fr 44px; align-items: center; gap: 6px; min-height: 40px; }
+.taste-label { font-size: 13.5px; font-weight: 600; }
+.taste-end { color: var(--faint); font-size: 11px; }
+.taste-end:last-child { text-align: right; }
+.taste-dots { display: flex; justify-content: space-between; }
+.taste-dots > button { position: relative; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); transition: background 140ms, border-color 140ms; }
+.taste-dots > button::after { content: ""; position: absolute; inset: -7px -4px; }   /* bigger tap area */
+.taste-dots > button.on { border-color: transparent; background: var(--accent); }
+
 .note-input, .text-input {
   width: 100%;
   border-radius: 11px;

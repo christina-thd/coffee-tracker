@@ -5,7 +5,8 @@
  * @typedef {'good' | 'sour' | 'bitter' | 'off'} Verdict
  * @typedef {{ id: string, name: string, roaster: string, origin: string, variety: string, process: string | null,
  *   roast: string | null, roastFor: string | null, roastedOn: string | null, shop: string, price: number | null,
- *   weight: number | null, flavor: string, notes: string, finished: boolean, createdAt: number }} Bean
+ *   weight: number | null, flavor: string, body: number | null, acidity: number | null, sweetness: number | null,
+ *   aftertaste: number | null, notes: string, finished: boolean, createdAt: number }} Bean
  * @typedef {{ id: string, beanId: string, method: Method, grind: string, dose: number | null, out: number | null,
  *   seconds: number | null, temp: number | null, verdict: Verdict | null, comment: string, brewedAt: number }} Brew
  */
@@ -21,6 +22,16 @@ export const ROASTS = Object.freeze([
   { id: 'medium-dark', label: 'Med-dark' },
   { id: 'dark', label: 'Dark' },
 ]);
+
+/** A bean's taste, each scored 1 to 5 (or not). */
+export const TASTE = Object.freeze([
+  { id: 'body', label: 'Body', low: 'Light', high: 'Full' },
+  { id: 'acidity', label: 'Acidity', low: 'Low', high: 'Bright' },
+  { id: 'sweetness', label: 'Sweetness', low: 'Low', high: 'High' },
+  { id: 'aftertaste', label: 'Aftertaste', low: 'Short', high: 'Long' },
+]);
+export const MAX_SCORE = 5;
+export const isScore = (value) => Number.isInteger(value) && value >= 1 && value <= MAX_SCORE;
 
 export const ROAST_FOR = Object.freeze([
   { id: 'espresso', label: 'Espresso', card: 'Espresso roast' },

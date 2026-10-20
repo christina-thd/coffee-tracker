@@ -23,12 +23,13 @@ describe('beans', () => {
     const { beanId } = applyAction(state, {
       type: 'addBean', name: '  Ethiopia   Guji ', roaster: 'Coffee Island', origin: 'Ethiopia', process: 'natural',
       roast: 'light', roastFor: 'pourover', roastedOn: '2026-09-28', shop: 'The shop', price: 14.5, weight: 250,
-      flavor: 'Blueberry', notes: 'Line one\r\nLine two',
+      flavor: 'Blueberry', body: 4, acidity: 5, sweetness: 3, notes: 'Line one\r\nLine two',
     }, NOW);
     assert.deepEqual(state.beans[0], {
       id: beanId, name: 'Ethiopia Guji', roaster: 'Coffee Island', origin: 'Ethiopia', variety: '', shop: 'The shop',
       flavor: 'Blueberry', process: 'natural', roast: 'light', roastFor: 'pourover', roastedOn: '2026-09-28', price: 14.5,
-      weight: 250, notes: 'Line one\nLine two', finished: false, createdAt: NOW,
+      weight: 250, body: 4, acidity: 5, sweetness: 3, aftertaste: null, notes: 'Line one\nLine two', finished: false,
+      createdAt: NOW,
     });
   });
 
@@ -43,6 +44,9 @@ describe('beans', () => {
     rejects(state, { type: 'editBean', beanId, roast: 'burnt' });
     rejects(state, { type: 'editBean', beanId, roastFor: 'turkish' });
     rejects(state, { type: 'editBean', beanId, roastFor: 'omni' });
+    rejects(state, { type: 'editBean', beanId, body: 6 });
+    rejects(state, { type: 'editBean', beanId, acidity: 2.5 });
+    rejects(state, { type: 'editBean', beanId, sweetness: '3' });
     rejects(state, { type: 'editBean', beanId, process: 'fermented in a sock' });
     rejects(state, { type: 'editBean', beanId, price: -1 });
     rejects(state, { type: 'editBean', beanId, price: '14' });

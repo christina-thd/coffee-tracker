@@ -13,7 +13,8 @@ test('a saved tracker comes back as it was', () => {
     schema: SCHEMA_VERSION,
     beans: [{
       id: 'abc', name: 'Guji', roaster: 'R', origin: 'O', variety: 'V', shop: 'S', flavor: 'F', process: 'washed',
-      roast: 'medium', roastFor: 'espresso', roastedOn: '2026-09-01', price: 12.5, weight: 250, notes: 'n', finished: true, createdAt: NOW - 5,
+      roast: 'medium', roastFor: 'espresso', roastedOn: '2026-09-01', price: 12.5, weight: 250, body: 3, acidity: 4,
+      sweetness: 2, aftertaste: 5, notes: 'n', finished: true, createdAt: NOW - 5,
     }],
     brews: [{
       id: 'def', beanId: 'abc', method: 'pourover', grind: '24', dose: 15, out: 250, seconds: 190, temp: 94,
@@ -26,7 +27,7 @@ test('a saved tracker comes back as it was', () => {
 test('odd values are repaired, unusable entries dropped', () => {
   const state = normalizeState({
     beans: [
-      { id: 'abc', name: '  Guji  ', roast: 'burnt', roastFor: 'turkish', price: -3, weight: '250', roastedOn: 'yesterday', finished: 'yes' },
+      { id: 'abc', name: '  Guji  ', roast: 'burnt', roastFor: 'turkish', body: 9, acidity: 0, price: -3, weight: '250', roastedOn: 'yesterday', finished: 'yes' },
       { id: 'abc', name: 'Duplicate id' },
       { name: '' },
       'not a bean',
@@ -42,6 +43,8 @@ test('odd values are repaired, unusable entries dropped', () => {
   assert.equal(bean.name, 'Guji');
   assert.equal(bean.roast, null);
   assert.equal(bean.roastFor, null);
+  assert.equal(bean.body, null);
+  assert.equal(bean.acidity, null);
   assert.equal(bean.price, null);
   assert.equal(bean.weight, null);
   assert.equal(bean.roastedOn, null);

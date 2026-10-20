@@ -81,6 +81,9 @@ brew's `out` is the espresso's yield or the pour over's water, `seconds` its tim
 server just sees `addBean`). Bags with the same name and roaster are the same coffee (`sameCoffee`, `bagIdsOf`):
 filters, good settings (`goodSettings`) and a new bag's first brew look at all of them. Nothing links them in the data.
 
+**Taste** (`TASTE` in `shared/coffee.js`): `body`, `acidity`, `sweetness` and `aftertaste` on each bean, a whole
+number from 1 to `MAX_SCORE` (5) or `null`.
+
 **Saved data** is versioned (`schema`). `normalizeState` repairs anything odd in the file on load
 (unknown values fall back to empty; beans without a name and brews without a known bean or method are dropped), so a
 bad edit can't break the app.

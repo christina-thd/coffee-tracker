@@ -1,6 +1,6 @@
 import { sendAction } from '../shared/api.js';
 import {
-  bagIdsOf, costOf, goodSettings, latestBrew, METHODS, parseNumber, PROCESSES, ROAST_FOR, ROASTS, suits,
+  bagIdsOf, costOf, goodSettings, latestBrew, METHODS, parseNumber, PROCESSES, MAX_SCORE, ROAST_FOR, ROASTS, suits, TASTE,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
 import { agoText, money, plural } from '../shared/format.js';
@@ -38,13 +38,14 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
   let beanId = null;                               // null: a new bean
   let roast = null;
   let roastFor = null;
+  let taste = {};                                  // body, acidity, sweetness, aftertaste: 1 to 5, or null
   let armed = false;
   let busy = false;
   const expanded = new Set();                      // methods showing all good settings
   let shownAs = '';                                // the form as it was filled: anything else is unsaved
 
   const formState = () => JSON.stringify([...Object.values(TEXT_FIELDS).map((id) => input(id).value), process.value, roast,
-    roastFor, roastedOn.value, price.value, weight.value, notes.value]);
+    roastFor, roastedOn.value, price.value, weight.value, notes.value, taste]);
 
   const sheet = createSheet($('beanLayer'), {
     isDirty: () => Boolean(shownAs) && formState() !== shownAs,
@@ -153,6 +154,7 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
       process: process.value || null,
       roast,
       roastFor,
+      ...Object.fromEntries(TASTE.map((t) => [t.id, taste[t.id] ?? null])),
       roastedOn: roastedOn.value || null,
       price: numberIn(price, 'Price'),
       weight: numberIn(weight, 'Bag'),
@@ -172,6 +174,34 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     if (!button) return;
     roastFor = button.dataset.roastFor === roastFor ? null : button.dataset.roastFor;
     renderRoast();
+  });
+
+  $('beanTaste').innerHTML = TASTE.map((t) => `<div class="taste-row" data-taste="${t.id}">
+    <span class="taste-label">${t.label}</span>
+    <span class="taste-end">${t.low}</span>
+    <div class="taste-dots" role="radiogroup" aria-label="${t.label}">${Array.from({ length: MAX_SCORE }, (_, i) =>
+    `<button type="button" role="radio" data-score="${i + 1}" aria-label="${t.label}: ${i + 1} of ${MAX_SCORE}"></button>`).join('')}</div>
+    <span class="taste-end">${t.high}</span>
+  </div>`).join('');
+
+  function renderTaste() {
+    for (const row of $('beanTaste').querySelectorAll('[data-taste]')) {
+      const score = taste[/** @type {HTMLElement} */ (row).dataset.taste];
+      for (const dot of row.querySelectorAll('[data-score]')) {
+        const n = Number(/** @type {HTMLElement} */ (dot).dataset.score);
+        dot.classList.toggle('on', score != null && n <= score);
+        dot.setAttribute('aria-checked', String(n === score));
+      }
+    }
+  }
+
+  $('beanTaste').addEventListener('click', (e) => {
+    const dot = closest(e, '[data-score]');
+    const row = dot && closest(e, '[data-taste]');
+    if (!row) return;
+    const score = Number(dot.dataset.score);
+    taste = { ...taste, [row.dataset.taste]: taste[row.dataset.taste] === score ? null : score };   // tap again: not set
+    renderTaste();
   });
 
   $('beanSummary').addEventListener('click', (e) => {
@@ -239,6 +269,8 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     process.value = bean?.process ?? '';
     roast = bean?.roast ?? null;
     roastFor = bean?.roastFor ?? null;
+    taste = Object.fromEntries(TASTE.map((t) => [t.id, bean?.[t.id] ?? null]));
+    renderTaste();
     roastedOn.value = existing?.roastedOn ?? '';  // a new bag has its own roast date
     price.value = bean?.price != null ? String(bean.price) : '';
     weight.value = bean?.weight != null ? String(bean.weight) : '';
