@@ -8,7 +8,7 @@ import { sendAction, subscribe } from './shared/api.js';
 import { $ } from './shared/dom.js';
 import { storage } from './shared/storage.js';
 import { addTabIcons, icon } from './ui/icons.js';
-import { closeTopSheet } from './ui/sheet.js';
+import { closeTopSheet, whenSheetsClosed } from './ui/sheet.js';
 import { toast, toastError } from './ui/toast.js';
 import { trackVisibleViewport } from './ui/viewport.js';
 
@@ -38,9 +38,12 @@ const beanSheet = createBeanSheet({
     if (!bean) return;
     const cardId = cardBagOf(beans, bean).id;
     opened = { ...opened, [`${method}:${cardId}`]: PAGE };
-    setTab(method);
-    requestAnimationFrame(() => document.querySelector(`.column[data-tab="${method}"] [data-coffee="${cardId}"]`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    // the page is pinned until the sheet has closed
+    whenSheetsClosed(() => {
+      setTab(method);
+      requestAnimationFrame(() => document.querySelector(`.column[data-tab="${method}"] [data-coffee="${cardId}"]`)
+        ?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    });
   },
 });
 

@@ -106,7 +106,7 @@
             <span class="field-label"><span id="brewOutLabel"></span> <small id="brewOutUnit">g</small></span>
             <input type="text" class="text-input" id="brewOut" inputmode="decimal" maxlength="7" enterkeyhint="next">
           </label>
-          <label class="field">
+          <label class="field" id="brewTempField">
             <span class="field-label">Temp <small>°C</small></span>
             <input type="text" class="text-input" id="brewTemp" inputmode="decimal" maxlength="5" enterkeyhint="done">
           </label>
@@ -236,6 +236,7 @@
           <button type="button" class="pill" id="beanAgain" hidden></button>
           <button type="button" class="pill ghost" id="beanFinished"></button>
           <button type="button" class="pill danger" id="beanDelete"></button>
+          <p class="extra-hint" id="beanDeleteHint" hidden></p>
         </div>
       </form>
     </section>

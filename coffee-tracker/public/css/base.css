@@ -60,7 +60,8 @@ body {
   overflow-x: clip;
   overscroll-behavior: none;
 }
-body.locked { overflow: hidden; --toast-lift: 84px; }   /* a sheet is open: above its Save button */
+/* a sheet is open: the page is pinned where it was (js/ui/sheet.js), messages above its Save button */
+body.locked { position: fixed; left: 0; right: 0; overflow: hidden; --toast-lift: 84px; }
 body.locked .toast { max-width: calc(100% - 32px); }
 
 button, input, textarea, select { font: inherit; color: inherit; }

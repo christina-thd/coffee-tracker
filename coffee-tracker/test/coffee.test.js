@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  bagIdsOf, costOf, formatDuration, goodSettings, isDate, latestBrew, parseNumber, ratio, sameCoffee, suits,
+  bagIdsOf, costOf, formatDuration, goodSettings, gramsLeft, isDate, latestBrew, parseNumber, ratio, sameCoffee, suits,
 } from '../public/js/shared/coffee.js';
 
 test('numbers as typed on a phone', () => {
@@ -97,4 +97,14 @@ test('what a cup costs', () => {
   assert.equal(costOf({ ...bean, weight: null }, 18), null);
   assert.equal(costOf({ ...bean, price: null }, 18), null);
   assert.equal(costOf(bean, null), null);
+});
+
+test('grams left in a bag', () => {
+  const bean = /** @type {any} */ ({ id: 'a', weight: 250 });
+  const brews = /** @type {any} */ ([{ beanId: 'a', dose: 18 }, { beanId: 'a', dose: 18.5 }, { beanId: 'a', dose: null },
+    { beanId: 'b', dose: 20 }]);
+  assert.equal(gramsLeft(bean, brews), 213.5);
+  assert.equal(gramsLeft(bean, []), 250);
+  assert.equal(gramsLeft({ ...bean, weight: 30 }, brews), 0);
+  assert.equal(gramsLeft({ ...bean, weight: null }, brews), null);
 });

@@ -30,6 +30,6 @@ export function specsHtml(brew, { short = false } = {}) {
   const brewRatio = espresso ? '' : ratio(brew.dose, brew.out);
   if (brewRatio) parts.push(`<span class="spec spec-grams" title="Coffee : water">${brewRatio}</span>`);
   if (brew.seconds != null) parts.push(`<span class="spec spec-time">${formatDuration(brew.seconds)}</span>`);
-  if (espresso && !short && brew.temp != null) parts.push(`<span class="spec spec-faint">${num(brew.temp)}°</span>`);
+  if (!espresso && !short && brew.temp != null) parts.push(`<span class="spec spec-faint">${num(brew.temp)}°</span>`);
   return parts.length ? parts.join('') : '<span class="spec spec-faint">No settings</span>';
 }

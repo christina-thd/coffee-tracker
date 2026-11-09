@@ -9,6 +9,31 @@ const CLOSE_SPEED = 0.6;            // px per ms
 let open = 0;
 const stack = [];
 
+// iPhone scrolls the page behind a sheet despite overflow: hidden, so it's pinned in place while one is open
+let pinnedAt = 0;
+let afterClose = [];
+
+function lockPage() {
+  pinnedAt = window.scrollY;
+  document.body.style.top = `-${pinnedAt}px`;
+  document.body.classList.add('locked');
+}
+
+function unlockPage() {
+  document.body.classList.remove('locked');
+  document.body.style.top = '';
+  window.scrollTo(0, pinnedAt);
+  const queued = afterClose;
+  afterClose = [];
+  for (const fn of queued) fn();
+}
+
+/** Runs `fn` once no sheet is open (the page can scroll again). */
+export function whenSheetsClosed(fn) {
+  if (open === 0) fn();
+  else afterClose.push(fn);
+}
+
 function enableDragToClose(panel, close) {
   let drag = null;
   let justDragged = false;
@@ -109,7 +134,7 @@ export function createSheet(layer, { onClose, isDirty } = {}) {
     isOpen = false;
     closing = false;
     stack.splice(stack.indexOf(sheet), 1);
-    if (--open === 0) document.body.classList.remove('locked');
+    if (--open === 0) unlockPage();
     layer.classList.remove('open');
     const done = () => {
       if (isOpen) return;
@@ -129,10 +154,9 @@ export function createSheet(layer, { onClose, isDirty } = {}) {
     open() {
       if (isOpen) return;
       isOpen = true;
-      open++;
+      if (open++ === 0) lockPage();
       stack.push(sheet);
       pushBack(hide);
-      document.body.classList.add('locked');
       panel.style.transform = '';
       layer.hidden = false;
       void panel.offsetHeight;                      // force reflow so it slides in

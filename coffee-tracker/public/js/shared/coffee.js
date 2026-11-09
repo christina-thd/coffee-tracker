@@ -169,3 +169,14 @@ export function costOf(bean, dose) {
   if (bean.price == null || !bean.weight || !dose) return null;
   return (bean.price / bean.weight) * dose;
 }
+
+/**
+ * Grams left in a bag: its size minus the doses of its brews (never below 0); null without a size.
+ * @param {Bean} bean
+ * @param {Brew[]} brews
+ */
+export function gramsLeft(bean, brews) {
+  if (!bean.weight) return null;
+  const used = brews.reduce((sum, b) => sum + (b.beanId === bean.id ? b.dose ?? 0 : 0), 0);
+  return Math.max(0, Math.round((bean.weight - used) * 10) / 10);
+}
