@@ -1,6 +1,6 @@
 // Method tabs: a recipe card per coffee (its sweet spot, else last try). Beans tab: a card per bag.
 import {
-  bagIdsOf, formatDuration, labelOf, latestBrew, MAX_SCORE, METHODS, ratio, ROASTS, sameCoffee, suits, VERDICTS,
+  bagIdsOf, formatDuration, gramsLeft, labelOf, latestBrew, MAX_SCORE, METHODS, ratio, ROASTS, sameCoffee, suits, VERDICTS,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
 import { daysSince, num, plural } from '../shared/format.js';
@@ -22,6 +22,9 @@ const EMPTY = {
 };
 
 const lastUsed = (bean, brews) => latestBrew(brews, { beanId: bean.id })?.brewedAt ?? bean.createdAt;
+
+const roastHtml = (bean) =>
+  (bean.roast ? `<span class="roast-dot" data-roast="${bean.roast}"></span>${labelOf(ROASTS, bean.roast)}` : '');
 
 const verdictHtml = (verdict) =>
   (verdict ? `<span class="verdict" data-verdict="${verdict}">${labelOf(VERDICTS, verdict)}</span>` : '');
@@ -80,7 +83,8 @@ function coffeeHtml(method, bean, beans, brews, opened, clearing) {
     </li>`;
   }
 
-  const from = several ? `<p class="coffee-bag">${bagLabel(beans.find((b) => b.id === shown.beanId), bean.id)}</p>` : '';
+  const sub = [roastHtml(bean), several ? bagLabel(beans.find((b) => b.id === shown.beanId), bean.id) : ''].filter(Boolean);
+  const from = sub.length ? `<p class="coffee-bag">${sub.join(' · ')}</p>` : '';
   const clear = `<li class="clear-tries"><button type="button" class="pill danger${clearing ? ' armed' : ''}" data-clear="${bean.id}">${
     icon('trash')}<span>${clearing ? 'Tap again: delete all tries' : 'Delete all tries'}</span></button></li>`;
   const list = opened
@@ -131,20 +135,26 @@ function brewColumnHtml(method, beans, brews, opened, clearing) {
   return inUse.map(card).join('') + (finished.length ? `<li class="list-heading">Finished</li>${finished.map(card).join('')}` : '');
 }
 
-/** Two lines: the name and its stars, then roaster · roast · days off roast. The rest is in the bean sheet. */
-function beanHtml(bean, now) {
+/** Two lines: the name, then roaster · days off roast · grams left; stars and roast on the right. */
+function beanHtml(bean, brews, now) {
+  const left = bean.finished ? null : gramsLeft(bean, brews);
   const sub = [
     bean.roaster,
     bean.roastedOn && !bean.finished ? `${plural(daysSince(bean.roastedOn, now), 'day')} off roast` : '',
+    left != null ? `${num(left)}g left` : '',
   ].filter(Boolean).join(' · ');
   const stars = bean.rating
     ? `<span class="stars" aria-label="${bean.rating} of ${MAX_SCORE} stars">${Array.from({ length: MAX_SCORE }, (_, i) =>
       `<span class="${i < bean.rating ? 'on' : ''}">${icon('star')}</span>`).join('')}</span>`
     : '';
-  const roast = bean.roast ? `<span class="bean-roast"><span class="roast-dot" data-roast="${bean.roast}"></span>${labelOf(ROASTS, bean.roast)}</span>` : '';
+  const roast = bean.roast ? `<span class="bean-roast">${roastHtml(bean)}</span>` : '';
   // on the right: the stars, the roast under them (centred alone)
   const side = stars || roast ? `<div class="bean-side">${stars}${roast}</div>` : '';
+  const forMethod = METHODS.find((m) => m.id === bean.roastFor);
+  const purpose = forMethod ? `Roasted for ${forMethod.label.toLowerCase()}`
+    : bean.roastFor === 'other' ? 'Roasted for other methods' : 'Not set what it\'s roasted for';
   return `<li class="bean${bean.finished ? ' finished' : ''}" data-bean-open="${bean.id}">
+    <span class="bean-for" title="${purpose}" aria-label="${purpose}">${icon(forMethod?.id ?? 'bean')}</span>
     <div class="bean-main">
       <p class="bean-name">${escapeHtml(bean.name)}</p>
       ${sub ? `<p class="bean-sub">${escapeHtml(sub)}</p>` : ''}
@@ -157,7 +167,7 @@ function beanHtml(bean, now) {
 function beansHtml(beans, brews, now, filter) {
   const byUse = [...beans].filter((b) => filter === 'all' || suits(b, filter))
     .sort((a, b) => lastUsed(b, brews) - lastUsed(a, brews));
-  const card = (b) => beanHtml(b, now);
+  const card = (b) => beanHtml(b, brews, now);
   const finished = byUse.filter((b) => b.finished);
   return byUse.filter((b) => !b.finished).map(card).join('')
     + (finished.length ? `<li class="list-heading">Finished</li>${finished.map(card).join('')}` : '');

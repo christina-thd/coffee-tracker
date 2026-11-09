@@ -1,10 +1,10 @@
 import { sendAction } from '../shared/api.js';
 import {
-  bagIdsOf, costOf, goodSettings, labelOf, latestBrew, METHODS, parseNumber, PROCESSES, MAX_SCORE, ROAST_FOR, ROASTS, suits,
+  bagIdsOf, costOf, goodSettings, gramsLeft, labelOf, latestBrew, METHODS, parseNumber, PROCESSES, MAX_SCORE, ROAST_FOR, ROASTS, suits,
   TASTE,
 } from '../shared/coffee.js';
 import { $, closest, escapeHtml } from '../shared/dom.js';
-import { agoText, bagSize, daysSince, money, plural, shortDate } from '../shared/format.js';
+import { agoText, bagSize, daysSince, money, num, plural, shortDate } from '../shared/format.js';
 import { icon } from '../ui/icons.js';
 import { createSheet } from '../ui/sheet.js';
 import { toast, toastError } from '../ui/toast.js';
@@ -110,8 +110,10 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
       bean.shop ? escapeHtml(bean.shop) : ''].filter(Boolean).join(' · ');
     const origin = [bean.origin, bean.variety, labelOf(PROCESSES, bean.process)].filter(Boolean).map(escapeHtml).join(' · ');
     const roasted = bean.roastedOn ? `Roasted ${shortDate(bean.roastedOn)}` : '';
+    const grams = bean.finished ? null : gramsLeft(bean, getBrews());
+    const left = grams != null ? `${num(grams)}g left` : '';
     $('viewDetails').innerHTML = section('Taste', tasteBody)
-      + section('Bag', [bag, roasted].filter(Boolean).map((t) => `<p>${t}</p>`).join(''))
+      + section('Bag', [bag, left, roasted].filter(Boolean).map((t) => `<p>${t}</p>`).join(''))
       + section('Origin', origin ? `<p>${origin}</p>` : '')
       + section('Notes', bean.notes ? `<p class="view-notes">${escapeHtml(bean.notes)}</p>` : '');
   }
@@ -267,7 +269,10 @@ export function createBeanSheet({ getBeans, getBrews, getCurrency, onLog, onHist
     finished.innerHTML = bean.finished ? `${icon('bean')}<span>Back in use</span>` : `${icon('archive')}<span>Bag finished</span>`;
     const count = getBrews().filter((b) => b.beanId === bean.id).length;
     remove.classList.toggle('armed', armed);
-    remove.innerHTML = `${icon('trash')}<span>${armed ? `Tap again: delete it${count ? ` and its ${plural(count, 'brew')}` : ''}` : 'Delete'}</span>`;
+    // short, so the button stays where it was; what goes with it is said under the buttons
+    remove.innerHTML = `${icon('trash')}<span>${armed ? 'Tap again' : 'Delete'}</span>`;
+    $('beanDeleteHint').hidden = !armed;
+    $('beanDeleteHint').textContent = `Deletes this bag${count ? ` and its ${plural(count, 'brew')}` : ''}. It can't be undone.`;
   }
 
   function collect() {

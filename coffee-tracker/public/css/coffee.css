@@ -107,6 +107,7 @@ body.offline .offline-badge { display: inline-flex; }
 .coffee-head { display: flex; align-items: baseline; gap: 10px; }
 .coffee-head .bean-name { flex: 1; min-width: 0; font-size: 16px; }
 .coffee-bag { margin: 1px 0 0; color: var(--faint); font-size: 11.5px; }
+.coffee-bag .roast-dot { display: inline-block; width: 7px; height: 7px; margin-right: 4px; vertical-align: 0; }
 
 .status { display: inline-flex; align-items: center; gap: 4px; flex: none; color: var(--verdict, var(--faint)); font-size: 12px; font-weight: 600; }
 .status svg.icon { width: 13px; height: 13px; stroke-width: 2.6; }
@@ -246,6 +247,9 @@ body.offline .offline-badge { display: inline-flex; }
 .bean.finished { opacity: 0.55; }
 .bean { display: flex; align-items: center; gap: 12px; }
 .bean-main { flex: 1; min-width: 0; }
+/* what it's roasted for */
+.bean-for { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-3); color: var(--accent); }
+.bean-for svg.icon { width: 17px; height: 17px; }
 .bean-side { display: flex; flex: none; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; }
 .bean-roast { display: inline-flex; align-items: center; color: var(--muted); font-size: 12px; font-weight: 600; }
 .bean-name { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 700; }
@@ -438,3 +442,4 @@ input[type="date"].text-input { min-width: 0; }
   border-top: 1px solid var(--line);
 }
 .dates { flex: 1 1 100%; margin: 0; color: var(--faint); font-size: 12px; }
+.extra-hint { flex: 1 1 100%; margin: 0; color: var(--danger); font-size: 12px; }

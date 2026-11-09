@@ -103,6 +103,10 @@ there are no counts of cups or brews.
 **Unsaved changes:** a sheet's `isDirty` compares the form with how it was when it opened; closing a changed one
 turns Close into "Discard changes?" first (`js/ui/sheet.js`). Saving and deleting close without asking.
 
+**The page behind a sheet** is pinned (`body.locked` is `position: fixed` at the scroll position), as iPhone scrolls it
+despite `overflow: hidden`; closing the last sheet puts it back. Scrolling the page after a sheet closes goes through
+`whenSheetsClosed`.
+
 **Back button:** opening a sheet adds a history entry, so the phone's back button (and the Home Assistant app's)
 closes it instead of leaving the page (`js/ui/back.js`). The brew sheet can open on top of the bean sheet.
 

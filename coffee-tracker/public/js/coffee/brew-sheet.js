@@ -100,7 +100,9 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     const espresso = method === 'espresso';
     minutes.hidden = espresso;
     $('brewColon').hidden = espresso;
+    $('brewTempField').hidden = espresso;
     seconds.placeholder = espresso ? 'seconds' : 'sec';
+    out.placeholder = '';
   }
 
   function renderVerdict() {
@@ -164,26 +166,30 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     grind.value = good.grind;
     if (good.dose != null) dose.value = num(good.dose);
     if (good.out != null) out.value = num(good.out);
-    if (good.temp != null) temp.value = num(good.temp);
+    if (good.temp != null && method !== 'espresso') temp.value = num(good.temp);
     touched = true;
     renderRatio();
     toast('Good settings filled in', { icon: 'check' });
   });
 
   /**
-   * Copies `from`, else this coffee's last try, else this method's last (minus grind/time: another coffee's).
+   * Copies the dose (and a pour over's water and temperature) from `from`, else this coffee's last try, else this
+   * method's last. What changes every try (grind, time, an espresso's yield) is left to fill in, the last one as a hint.
    * @param {Brew | null} [from]
    */
   function prefill(from = null) {
+    const espresso = method === 'espresso';
     const last = from ?? lastOfBean();
     const any = last ?? latestBrew(getBrews(), { method });
-    grind.value = last?.grind ?? '';
-    grind.placeholder = any?.grind ? `e.g. ${any.grind}` : '';
+    const hint = (value) => (value ? `e.g. ${value}` : '');
+    grind.value = '';
+    grind.placeholder = hint(any?.grind);
     dose.value = any?.dose != null ? num(any.dose) : '';
-    out.value = any?.out != null ? num(any.out) : '';
-    temp.value = any?.temp != null ? num(any.temp) : '';
-    setSeconds(last?.seconds ?? null);
-    seconds.placeholder = method === 'espresso' ? 'seconds' : 'sec';
+    out.value = !espresso && any?.out != null ? num(any.out) : '';
+    out.placeholder = espresso && any?.out != null ? hint(num(any.out)) : '';
+    temp.value = !espresso && any?.temp != null ? num(any.temp) : '';
+    setSeconds(null);
+    seconds.placeholder = espresso ? hint(last?.seconds != null && num(last.seconds)) || 'seconds' : 'sec';
     renderRatio();
   }
 
@@ -208,6 +214,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     verdict = null;
     touched = Boolean(from);
     comment.value = '';
+    renderMethod();
     prefill(from);
     return true;
   }
@@ -277,7 +284,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
         dose: numberIn(dose, 'Dose'),
         out: numberIn(out, methodOf(method).out),
         seconds: getSeconds(),
-        temp: numberIn(temp, 'Temperature'),
+        temp: method === 'espresso' && !brewId ? null : numberIn(temp, 'Temperature'),   // espresso: not asked
         verdict,
         comment: comment.value.trim(),
       };
@@ -304,7 +311,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
     if (!armed) {
       armed = true;
       remove.classList.add('armed');
-      remove.innerHTML = `${icon('trash')}<span>Tap again to delete</span>`;
+      remove.innerHTML = `${icon('trash')}<span>Tap again</span>`;   // short: the button stays where it is
       return;
     }
     sheet.close({ force: true });
@@ -315,7 +322,6 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
 
   function show() {
     disarm();
-    renderMethod();
     renderVerdict();
     renderRatio();
     renderLast();
@@ -343,6 +349,7 @@ export function createBrewSheet({ getBeans, getBrews, onDeleted }) {
       brewId = brew.id;
       method = brew.method;
       picked = brew.beanId;
+      renderMethod();
       renderBeans(brew.beanId);
       grind.value = brew.grind;
       grind.placeholder = '';

@@ -23,11 +23,11 @@ coffee pours right, then come back when you want the settings.
 On the Espresso and Pour over tabs, each coffee (every bag of it together) has a recipe card:
 
 - **The recipe**: your sweet spot (the last brew that came out **Good**), else your last try, as labelled values:
-  **Grind · In · Out · Time** for espresso, **Grind · Ratio · Time** for pour over. With more than one bag, it says
-  which bag it's from.
+  **Grind · In · Out · Time** for espresso, **Grind · Ratio · Time** for pour over. Under the name are its roast and,
+  with more than one bag, which bag it's from.
 - **Top right**: how it came out: **✓ sweet spot**, or the last try's taste with which way to grind ("sour · grind
   finer", "bitter · grind coarser").
-- **Again**: a new try, copied from the recipe shown.
+- **Again**: a new try, starting from the recipe shown.
 - **Tries** (tap anywhere on the card): every try, newest first; **Show older** shows more. Tap one to change or delete
   it; its ↻ button starts a new try copied from it.
 - A coffee not made that way yet just has **First shot** (or **First brew**).
@@ -37,12 +37,12 @@ colour is how it tasted: **Good** (green), **Sour** (yellow), **Bitter** (red) o
 
 ## Logging a brew
 
-You never type a try from scratch. **Again** on a coffee's card (the round **+** does it too, for the coffee you
-brewed last) opens a new try **copied from your last one**: grind, dose, yield, time and temperature are all filled in, and
-the last try is shown above, with how it tasted. Change what's different (usually the grind and the time: tapping a
-field selects it, so you just type), pick how it was, and **Log it**. If it isn't good yet, **Again** on the card
-copies the one you just saved. To start from an older try, use its ↻ button, or open it and
-tap **Try again from this**.
+**Again** on a coffee's card (the round **+** does it too, for the coffee you brewed last) opens a new try **starting
+from your last one**: the dose is filled in (and for a pour over the water and temperature too), and the last try is
+shown above, with how it tasted. The grind, the time and an espresso's yield change every try, so they're left for you
+to fill in, with the last one shown in each field ("e.g. 9"). Pick how it was, and **Log it**. If it isn't good yet,
+**Again** on the card starts from the one you just saved. To start from an older try, use its ↻ button, or open it
+and tap **Try again from this**.
 
 | Field                   | Espresso                         | Pour over                        |
 |-------------------------|----------------------------------|----------------------------------|
@@ -50,7 +50,7 @@ tap **Try again from this**.
 | Time                    | shot time, in seconds            | brew time, minutes and seconds   |
 | Dose                    | coffee in, grams                 | coffee in, grams                 |
 | Yield / Water           | espresso in the cup, grams       | water poured, ml                 |
-| Temp                    | water temperature, °C            | water temperature, °C            |
+| Temp                    | not asked                        | water temperature, °C            |
 
 Tries show the grind, then for espresso the grams in → out ("18g → 36g") and the shot time; for a pour over the ratio
 of coffee to water ("1:18") and the brew time. The time is in bold, to tell it from the grams. Everything else is in
@@ -60,10 +60,10 @@ the brew when you open it. The ratio is worked out as you type. Every number is 
 The next brew of that coffee reminds you. Tap the selected one again to leave it unrated.
 
 When your last brew wasn't good, the **last good** one shows under it (from an earlier bag too). **Use** fills in its
-grind, dose, yield and temperature.
+grind, dose, yield (or water) and, for a pour over, temperature.
 
-Tap a try (in a card's tries) to change it (its coffee and kind too) or delete it; **Delete** asks you to tap
-it again. **Delete all tries**, at the bottom of a coffee's tries, deletes every try of it made that way (with every
+Tap a try (in a card's tries) to change it (its coffee and kind too) or delete it; **Delete** turns into **Tap again**,
+and a second tap deletes it. **Delete all tries**, at the bottom of a coffee's tries, deletes every try of it made that way (with every
 bag of it); it asks too, as neither can be undone. The coffee itself stays.
 
 Messages at the bottom of the screen say what was done ("Saved", "Deleted"); tap one to dismiss it.
@@ -74,8 +74,12 @@ them.
 
 ## Beans
 
-The Beans tab has a card per bag: its name, its roaster and how many days it is off roast, and on the right your star
-rating with its roast (a dot in the roast's colour) under it. Everything else is in the bean sheet.
+The Beans tab has a card per bag: on the left what it's roasted for (a cup for espresso, a dripper for pour over, a
+bean for other), then its name, its roaster, how many days it is off roast and how many grams are left, and on the
+right your star rating with its roast (a dot in the roast's colour) under it. Everything else is in the bean sheet.
+
+**Grams left** is the bag size minus the dose of every brew made with that bag, so it's only there when the bag size is
+filled in, and only as right as the doses you log.
 
 What it was roasted for (espresso, pour over or other) decides where it's offered: a coffee roasted for one is only
 offered for logging that way. The cup and dripper buttons at the top right show just the beans for that method; tap
@@ -102,7 +106,8 @@ its history. **Back in use** undoes it.
 fill that in and check the price, bag size and where you bought it. A coffee's bags are the ones with the same name and
 roaster: their good settings show together, and the new bag's first brew starts from the last one of the earlier bag.
 
-**Delete** removes the bag and every brew made with it; it asks first (tap it again), as this can't be undone.
+**Delete** removes the bag and every brew made with it; it asks first (it turns into **Tap again**, and says how many
+brews go with it), as this can't be undone.
 
 ## Phone and PC
 
